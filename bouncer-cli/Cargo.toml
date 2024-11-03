@@ -1,0 +1,11 @@
+[package]
+name = "bouncer-cli"
+version.workspace = true
+license.workspace = true
+publish.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+clap = { version = "4.5.20", features = ["derive"] }
+thiserror.workspace = true

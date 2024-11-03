@@ -8,6 +8,7 @@ rust-version.workspace = true
 
 [dependencies]
 bouncer-config = { path = "../bouncer-config" }
+bouncer-cli = { path = "../bouncer-cli" }
 
 anyhow.workspace = true
 tokio = { version = "1.41.0", features = ["macros", "rt-multi-thread"] }

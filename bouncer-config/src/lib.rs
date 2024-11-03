@@ -4,11 +4,10 @@ use figment::{
     providers::{Env, Format as _, Yaml},
     Figment,
 };
-use serde::Deserialize;
 
 pub mod discord;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, serde::Deserialize)]
 pub struct Config {
     /// Discord configuration.
     pub discord: discord::Config,
@@ -19,6 +18,6 @@ pub fn parse_config(config_path: impl AsRef<Path>) -> anyhow::Result<Config> {
     Figment::new()
         .merge(Yaml::file(config_path))
         .merge(Env::prefixed("BOUNCER_").split("__"))
-        .extract::<Config>()
+        .extract()
         .map_err(anyhow::Error::from)
 }

@@ -1,5 +1,5 @@
 [workspace]
-members = ["bouncer", "bouncer-config"]
+members = ["bouncer", "bouncer-cli", "bouncer-config"]
 resolver = "2"
 
 [workspace.package]
@@ -11,6 +11,7 @@ rust-version = "1.82.0"
 
 [workspace.dependencies]
 anyhow = "1.0.92"
+thiserror = "1.0.67"
 tracing = "0.1.40"
 tracing-subscriber = "0.3.18"
 

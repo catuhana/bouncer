@@ -1,7 +1,6 @@
 use secrecy::SecretString;
-use serde::Deserialize;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, serde::Deserialize)]
 pub struct Config {
     /// The token of the Discord bot.
     pub token: SecretString,
