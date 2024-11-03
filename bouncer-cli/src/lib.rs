@@ -35,8 +35,8 @@ impl Cli {
     ///
     /// # Errors
     ///
-    /// If specified `path` doesn't exist, returns
-    /// [`ConfigValidationError::DoesNotExist`].
+    /// If specified `path` doesn't exist, returns [`ConfigValidationError::DoesNotExist`]
+    /// error.
     fn _config_validate(path: &str) -> Result<PathBuf, ConfigValidationError> {
         let path = PathBuf::from(path);
         if !path.exists() {
