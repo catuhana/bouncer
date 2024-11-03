@@ -4,7 +4,7 @@ async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt::init();
 
     let cli = bouncer_cli::Cli::parse_and_validate()?;
-    let config = bouncer_config::parse_config(&cli.config)?;
+    let config = bouncer_config::Config::parse(&cli.config)?;
 
     dbg!(config);
 

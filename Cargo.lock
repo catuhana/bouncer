@@ -124,6 +124,7 @@ dependencies = [
  "figment",
  "secrecy",
  "serde",
+ "thiserror",
 ]
 
 [[package]]

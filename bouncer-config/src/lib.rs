@@ -13,11 +13,19 @@ pub struct Config {
     pub discord: discord::Config,
 }
 
-/// Parse bouncer configuration from a file and environment variables.
-pub fn parse_config(config_path: impl AsRef<Path>) -> anyhow::Result<Config> {
-    Figment::new()
-        .merge(Yaml::file(config_path))
-        .merge(Env::prefixed("BOUNCER_").split("__"))
-        .extract()
-        .map_err(anyhow::Error::from)
+impl Config {
+    /// Parse bouncer configuration from a file and environment variables.
+    pub fn parse(config_path: impl AsRef<Path>) -> Result<Self, ConfigParseError> {
+        Figment::new()
+            .merge(Yaml::file(config_path))
+            .merge(Env::prefixed("BOUNCER_").split("__"))
+            .extract()
+            .map_err(From::from)
+    }
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum ConfigParseError {
+    #[error(transparent)]
+    FigmentExtract(#[from] figment::Error),
 }

@@ -8,6 +8,7 @@ rust-version.workspace = true
 
 [dependencies]
 anyhow.workspace = true
+figment = { version = "0.10.19", features = ["env", "yaml"] }
 secrecy = { version = "0.10.3", features = ["serde"] }
 serde = { version = "1.0.214", features = ["derive"] }
-figment = { version = "0.10.19", features = ["env", "yaml"] }
+thiserror.workspace = true
