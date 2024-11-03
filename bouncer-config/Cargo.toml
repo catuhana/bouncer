@@ -12,3 +12,6 @@ figment = { version = "0.10.19", features = ["env", "yaml"] }
 secrecy = { version = "0.10.3", features = ["serde"] }
 serde = { version = "1.0.214", features = ["derive"] }
 thiserror.workspace = true
+
+[dev-dependencies]
+figment = { version = "0.10.19", features = ["test"] }
