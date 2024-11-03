@@ -9,3 +9,7 @@ rust-version.workspace = true
 [dependencies]
 clap = { version = "4.5.20", features = ["derive"] }
 thiserror.workspace = true
+
+[dev-dependencies]
+anyhow.workspace = true
+tempfile = "3.13.0"
