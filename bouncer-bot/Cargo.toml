@@ -1,5 +1,5 @@
 [package]
-name = "bouncer"
+name = "bouncer-bot"
 version.workspace = true
 license.workspace = true
 publish.workspace = true
@@ -7,15 +7,11 @@ edition.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-bouncer-bot = { path = "../bouncer-bot" }
-bouncer-config = { path = "../bouncer-config" }
-bouncer-cli = { path = "../bouncer-cli" }
-
 anyhow.workspace = true
 async-trait.workspace = true
+paste = "1.0.15"
+secrecy.workspace = true
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
-tracing.workspace = true
-tracing-subscriber.workspace = true
 twilight-cache-inmemory.workspace = true
 twilight-gateway.workspace = true
 twilight-http.workspace = true
