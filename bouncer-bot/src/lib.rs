@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use event_handler::{EventExt as _, EventHandler};
 use secrecy::{ExposeSecret, SecretString};
-use twilight_gateway::{EventTypeFlags, Intents, Shard, ShardId, StreamExt};
+use twilight_gateway::{Intents, Shard, ShardId, StreamExt};
 use twilight_http::Client as HttpClient;
 
 pub mod event_handler;
@@ -31,8 +31,12 @@ impl Client {
         }
     }
 
-    pub async fn start(&mut self, event_types: EventTypeFlags) {
-        while let Some(event) = self.shard.next_event(event_types).await {
+    pub async fn start(&mut self) {
+        while let Some(event) = self
+            .shard
+            .next_event(self.event_handler.used_event_flags())
+            .await
+        {
             let Ok(event) = event else {
                 tracing::error!(source = ?event.unwrap_err(), "error receiving event");
 

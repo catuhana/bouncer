@@ -1,5 +1,4 @@
 use bouncer_bot::{event_handler::EventHandler, Client};
-use twilight_gateway::EventTypeFlags;
 use twilight_model::gateway::payload::incoming::Ready;
 
 #[tokio::main]
@@ -25,7 +24,7 @@ async fn main() -> anyhow::Result<()> {
             .id
     );
 
-    client.start(EventTypeFlags::all()).await;
+    client.start().await;
 
     Ok(())
 }

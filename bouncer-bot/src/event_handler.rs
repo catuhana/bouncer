@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use twilight_gateway::Event;
+use twilight_gateway::{Event, EventTypeFlags};
 use twilight_model::gateway::payload::incoming::Ready;
 
 macro_rules! create_event_handlers {
@@ -10,6 +10,10 @@ macro_rules! create_event_handlers {
                     $(
                         async fn [<$event_name:snake>](&self, $arg: $arg_type);
                     )*
+
+                    fn used_event_flags(&self) -> EventTypeFlags {
+                        EventTypeFlags::empty() $(| EventTypeFlags::[<$event_name:snake:upper>])*
+                    }
             }
 
             #[async_trait]
