@@ -33,13 +33,13 @@ impl Client {
 
     pub async fn start(&mut self, event_types: EventTypeFlags) {
         while let Some(event) = self.shard.next_event(event_types).await {
-            match event {
-                Ok(event) => event.dispatch(&*self.event_handler).await,
-                Err(error) => {
-                    // TODO: We probably want to handle this.
-                    eprintln!("Error: {error:?}");
-                }
-            }
+            let Ok(event) = event else {
+                tracing::error!(source = ?event.unwrap_err(), "error receiving event");
+
+                continue;
+            };
+
+            event.dispatch(&*self.event_handler).await;
         }
     }
 }

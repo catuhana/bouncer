@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use twilight_gateway::Event;
-use twilight_model::gateway::payload::incoming::{BanAdd, Ready};
+use twilight_model::gateway::payload::incoming::Ready;
 
 macro_rules! create_event_handlers {
     ($($event_name:ident ($arg:ident: $arg_type:ty)),* $(,)?) => {
@@ -31,8 +31,7 @@ macro_rules! create_event_handlers {
 
 // TODO: Make these have `context` to reference the client.
 create_event_handlers! {
-    Ready(ready: Box<Ready>),
-    BanAdd(ban: BanAdd)
+    Ready(ready: Box<Ready>)
 }
 
 #[async_trait]
