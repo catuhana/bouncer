@@ -8,9 +8,7 @@ macro_rules! create_event_handlers {
             #[async_trait]
             pub trait EventHandler: Send + Sync {
                     $(
-                        async fn [<$event_name:snake>](&self, $arg: $arg_type) {
-                            drop($arg);
-                        }
+                        async fn [<$event_name:snake>](&self, $arg: $arg_type);
                     )*
             }
 
