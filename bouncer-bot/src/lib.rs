@@ -15,7 +15,7 @@ pub struct Client {
 
 pub struct ClientBuilder {
     http: HttpClient,
-    shards: ShardId,
+    shard_id: ShardId,
     intents: Intents,
     event_handler: Option<Box<dyn EventHandler>>,
 }
@@ -25,7 +25,7 @@ impl Client {
     pub fn builder(token: &SecretString) -> ClientBuilder {
         ClientBuilder {
             http: HttpClient::new(token.expose_secret().to_owned()),
-            shards: ShardId::ONE,
+            shard_id: ShardId::ONE,
             intents: Intents::empty(),
             event_handler: None,
         }
@@ -49,15 +49,15 @@ impl Client {
 }
 
 impl ClientBuilder {
-    #[must_use]
     /// # Panics
     ///
-    /// Panics if [`ClientBuilder::event_handler`] is not set with
-    /// [`ClientBuilder::event_handler`].
+    /// Panics if [`ClientBuilder::event_handler`] is not set.
+    // TODO: Maybe errors here should be handled properly?
+    #[must_use]
     pub fn build(self) -> Client {
         let http = Arc::new(self.http);
         let shard = Shard::new(
-            self.shards,
+            self.shard_id,
             http.token()
                 .expect("HTTP client doesn't have token")
                 .to_owned(),
