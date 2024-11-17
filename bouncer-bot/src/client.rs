@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use secrecy::{ExposeSecret as _, SecretString};
 use tokio::sync::Mutex;
+use twilight_cache_inmemory::InMemoryCache;
 use twilight_gateway::{Intents, Shard, ShardId, StreamExt as _};
 use twilight_http::Client as HttpClient;
 
@@ -13,6 +14,7 @@ use crate::{
 pub struct Client {
     shard: Arc<Mutex<Shard>>,
     http: Arc<HttpClient>,
+    cache: Arc<InMemoryCache>,
     event_handler: Box<dyn EventHandler>,
 }
 
@@ -48,6 +50,8 @@ impl Client {
                 continue;
             };
 
+            self.cache.update(&event);
+
             event
                 .dispatch(self.create_context(), &*self.event_handler)
                 .await;
@@ -55,7 +59,7 @@ impl Client {
     }
 
     fn create_context(&self) -> Context {
-        Context::new(self.shard.clone(), self.http.clone())
+        Context::new(self.shard.clone(), self.http.clone(), self.cache.clone())
     }
 }
 
@@ -74,11 +78,13 @@ impl ClientBuilder {
                 .to_owned(),
             self.intents,
         )));
+        let cache = Arc::new(InMemoryCache::new());
         let event_handler = self.event_handler.expect("event handler not set");
 
         Client {
             shard,
             http,
+            cache,
             event_handler,
         }
     }
