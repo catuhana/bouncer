@@ -1,14 +1,15 @@
+use crate::context::Context;
 use async_trait::async_trait;
 use twilight_gateway::{Event, EventTypeFlags};
 use twilight_model::gateway::payload::incoming::Ready;
 
 macro_rules! create_event_handlers {
-    ($($event_name:ident ($arg:ident: $arg_type:ty)),* $(,)?) => {
+    ($($event_name:ident ($arg_type:ty)),* $(,)?) => {
         paste::paste! {
             #[async_trait]
             pub trait EventHandler: Send + Sync {
                     $(
-                        async fn [<$event_name:snake>](&self, $arg: $arg_type);
+                        async fn [<$event_name:snake>](&self, context: Context, [<$event_name:snake>]: $arg_type);
                     )*
 
                     fn used_event_flags(&self) -> EventTypeFlags {
@@ -18,10 +19,10 @@ macro_rules! create_event_handlers {
 
             #[async_trait]
             impl EventExt for Event {
-                async fn dispatch(self, event_handler: &dyn EventHandler) {
+                async fn dispatch(self, context: Context, event_handler: &dyn EventHandler) {
                     match self {
                         $(
-                            Event::$event_name(ready) => event_handler.[<$event_name:snake>](ready).await,
+                            Event::$event_name(event) => event_handler.[<$event_name:snake>](context, event).await,
                         )*
                         _ => {}
                     }
@@ -31,12 +32,11 @@ macro_rules! create_event_handlers {
     };
 }
 
-// TODO: Make these have `context` to reference the client.
 create_event_handlers! {
-    Ready(ready: Box<Ready>)
+    Ready(Box<Ready>)
 }
 
 #[async_trait]
 pub trait EventExt {
-    async fn dispatch(self, event_handler: &dyn EventHandler);
+    async fn dispatch(self, context: Context, event_handler: &dyn EventHandler);
 }

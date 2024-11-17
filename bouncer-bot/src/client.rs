@@ -1,12 +1,18 @@
+use std::sync::Arc;
+
 use secrecy::{ExposeSecret as _, SecretString};
+use tokio::sync::Mutex;
 use twilight_gateway::{Intents, Shard, ShardId, StreamExt as _};
 use twilight_http::Client as HttpClient;
 
-use crate::event_handler::{EventExt as _, EventHandler};
+use crate::{
+    context::Context,
+    event_handler::{EventExt as _, EventHandler},
+};
 
 pub struct Client {
-    shard: Shard,
-    http: HttpClient,
+    shard: Arc<Mutex<Shard>>,
+    http: Arc<HttpClient>,
     event_handler: Box<dyn EventHandler>,
 }
 
@@ -31,6 +37,8 @@ impl Client {
     pub async fn start(&mut self) {
         while let Some(event) = self
             .shard
+            .lock()
+            .await
             .next_event(self.event_handler.used_event_flags())
             .await
         {
@@ -40,8 +48,14 @@ impl Client {
                 continue;
             };
 
-            event.dispatch(&*self.event_handler).await;
+            event
+                .dispatch(self.create_context(), &*self.event_handler)
+                .await;
         }
+    }
+
+    fn create_context(&self) -> Context {
+        Context::new(self.shard.clone(), self.http.clone())
     }
 }
 
@@ -52,14 +66,14 @@ impl ClientBuilder {
     // TODO: Maybe errors here should be handled properly?
     #[must_use]
     pub fn build(self) -> Client {
-        let http = self.http;
-        let shard = Shard::new(
+        let http = Arc::new(self.http);
+        let shard = Arc::new(Mutex::new(Shard::new(
             self.shard_id,
             http.token()
                 .expect("HTTP client doesn't have token")
                 .to_owned(),
             self.intents,
-        );
+        )));
         let event_handler = self.event_handler.expect("event handler not set");
 
         Client {

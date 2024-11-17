@@ -1,4 +1,4 @@
-use bouncer_bot::{Client, EventHandler};
+use bouncer_bot::{Client, Context, EventHandler};
 use twilight_model::gateway::payload::incoming::Ready;
 
 #[tokio::main]
@@ -22,7 +22,7 @@ struct Events;
 
 #[async_trait::async_trait]
 impl EventHandler for Events {
-    async fn ready(&self, ready: Box<Ready>) {
+    async fn ready(&self, _: Context, ready: Box<Ready>) {
         tracing::info!("Bouncer is ready as {:?}", ready.user.name);
     }
 }
