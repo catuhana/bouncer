@@ -37,10 +37,8 @@ impl Client {
     }
 
     pub async fn start(&mut self) {
-        while let Some(event) = self
-            .shard
-            .lock()
-            .await
+        let mut shard = self.shard.lock().await;
+        while let Some(event) = shard
             .next_event(self.event_handler.used_event_flags())
             .await
         {

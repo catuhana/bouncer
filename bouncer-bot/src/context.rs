@@ -12,7 +12,11 @@ pub struct Context {
 }
 
 impl Context {
-    pub fn new(shard: Arc<Mutex<Shard>>, http: Arc<HttpClient>, cache: Arc<InMemoryCache>) -> Self {
+    pub const fn new(
+        shard: Arc<Mutex<Shard>>,
+        http: Arc<HttpClient>,
+        cache: Arc<InMemoryCache>,
+    ) -> Self {
         Self { shard, http, cache }
     }
 }
