@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use secrecy::{ExposeSecret as _, SecretString};
 use twilight_gateway::{Intents, Shard, ShardId, StreamExt as _};
 use twilight_http::Client as HttpClient;
