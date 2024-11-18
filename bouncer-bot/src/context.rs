@@ -5,6 +5,7 @@ use twilight_cache_inmemory::InMemoryCache;
 use twilight_gateway::Shard;
 use twilight_http::Client as HttpClient;
 
+#[derive(Debug)]
 pub struct Context {
     pub shard: Arc<Mutex<Shard>>,
     pub http: Arc<HttpClient>,
