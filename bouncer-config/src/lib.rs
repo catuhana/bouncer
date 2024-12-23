@@ -62,7 +62,7 @@ mod tests {
     }
 
     #[test]
-    fn test_env_override() {
+    fn test_if_env_overrides_file() {
         Jail::expect_with(|jail| {
             jail.create_file(
                 "config.yaml",
@@ -89,7 +89,7 @@ mod tests {
     }
 
     #[test]
-    fn test_invalid_yaml() {
+    fn test_parse_invalid_config() {
         Jail::expect_with(|jail| {
             jail.create_file(
                 "config.yaml",

@@ -106,6 +106,7 @@ mod tests {
         let path = temp_file.path().to_str().unwrap();
 
         let result = Cli::_config_validate(path);
+
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), PathBuf::from(path));
     }
@@ -115,6 +116,7 @@ mod tests {
         let non_existent_path = "/path/that/does/not/exist/config.yaml";
 
         let result = Cli::_config_validate(non_existent_path);
+
         assert!(result.is_err());
         assert_eq!(
             result.unwrap_err(),
