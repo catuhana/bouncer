@@ -7,7 +7,7 @@ edition.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-bouncer-bot = { path = "../bouncer-bot" }
+bouncer-framework = { path = "../bouncer-framework" }
 bouncer-config = { path = "../bouncer-config" }
 bouncer-cli = { path = "../bouncer-cli" }
 

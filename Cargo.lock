@@ -152,28 +152,12 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "async-trait",
- "bouncer-bot",
  "bouncer-cli",
  "bouncer-config",
+ "bouncer-framework",
  "tokio",
  "tracing",
  "tracing-subscriber",
- "twilight-cache-inmemory",
- "twilight-gateway",
- "twilight-http",
- "twilight-model",
-]
-
-[[package]]
-name = "bouncer-bot"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "paste",
- "secrecy",
- "tokio",
- "tracing",
  "twilight-cache-inmemory",
  "twilight-gateway",
  "twilight-http",
@@ -199,6 +183,22 @@ dependencies = [
  "secrecy",
  "serde",
  "thiserror",
+]
+
+[[package]]
+name = "bouncer-framework"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "paste",
+ "secrecy",
+ "tokio",
+ "tracing",
+ "twilight-cache-inmemory",
+ "twilight-gateway",
+ "twilight-http",
+ "twilight-model",
 ]
 
 [[package]]

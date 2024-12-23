@@ -1,4 +1,4 @@
-use bouncer_bot::{Client, Context, EventHandler};
+use bouncer_framework::{Client, Context, EventHandler};
 use twilight_model::gateway::payload::incoming::Ready;
 
 #[tokio::main]
