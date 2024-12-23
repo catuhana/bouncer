@@ -23,6 +23,6 @@ struct Events;
 #[async_trait::async_trait]
 impl EventHandler for Events {
     async fn ready(&self, _: Context, ready: Box<Ready>) {
-        tracing::info!("Bouncer is ready as {:?}", ready.user.name);
+        tracing::info!("Bouncer is ready as {}", ready.user.name);
     }
 }
