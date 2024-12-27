@@ -1,4 +1,5 @@
 pub mod client;
+pub mod command;
 pub mod context;
 pub mod event_handler;
 

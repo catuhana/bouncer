@@ -11,6 +11,7 @@ anyhow.workspace = true
 async-trait.workspace = true
 paste = "1.0.15"
 secrecy.workspace = true
+thiserror.workspace = true
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
 tracing.workspace = true
 twilight-cache-inmemory.workspace = true
