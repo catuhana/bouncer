@@ -1,0 +1,339 @@
+use syn::spanned::Spanned as _;
+use twilight_validate::command;
+
+pub struct CommandOptionAttributeFields {
+    pub fields: Vec<CommandOptionField>,
+}
+
+#[derive(Default)]
+pub struct CommandOptionField {
+    pub name: String,
+    pub description: String,
+    pub r#type: CommandOptionType,
+    pub required: bool,
+}
+
+#[derive(Default)]
+pub enum CommandOptionType {
+    #[default]
+    String,
+    Integer,
+    Number,
+    Boolean,
+    User,
+    Channel,
+    Role,
+    Attachment,
+}
+
+impl CommandOptionField {
+    fn parse_description(field: &syn::MetaNameValue) -> Option<String> {
+        if !field.path.is_ident("description") {
+            return None;
+        }
+
+        match &field.value {
+            syn::Expr::Lit(syn::ExprLit {
+                lit: syn::Lit::Str(lit_str),
+                ..
+            }) => Some(lit_str.value()),
+            _ => None,
+        }
+    }
+
+    fn validate_description(description: &str, span: proc_macro2::Span) -> syn::Result<()> {
+        command::description(description).map_err(|error| syn::Error::new(span, error))
+    }
+}
+
+impl syn::parse::Parse for CommandOptionField {
+    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+        let fields =
+            syn::punctuated::Punctuated::<syn::MetaNameValue, syn::Token![,]>::parse_terminated(
+                input,
+            )?;
+
+        let mut description = String::default();
+
+        for field in fields {
+            if let Some(desc) = Self::parse_description(&field) {
+                description = desc;
+                Self::validate_description(&description, field.value.span())?;
+            }
+        }
+
+        Ok(Self {
+            description,
+            ..Default::default()
+        })
+    }
+}
+
+impl CommandOptionAttributeFields {
+    pub fn parse_attrs(input: &syn::DeriveInput) -> syn::Result<Self> {
+        let data = match &input.data {
+            syn::Data::Struct(data) => data,
+            _ => return Ok(Self { fields: Vec::new() }),
+        };
+
+        let named_fields = match &data.fields {
+            syn::Fields::Named(fields) => fields,
+            _ => return Ok(Self { fields: Vec::new() }),
+        };
+
+        let mut fields = Vec::new();
+        for field in &named_fields.named {
+            if let Some(attr) = field
+                .attrs
+                .iter()
+                .find(|attr| attr.path().is_ident("option"))
+            {
+                let mut option = attr.parse_args::<CommandOptionField>()?;
+                let (type_, required) = Self::parse_type(&field.ty)?;
+
+                option.name = field.ident.as_ref().map(|i| i.to_string()).ok_or_else(|| {
+                    syn::Error::new(field.span(), "Unnamed fields are not supported.")
+                })?;
+                Self::validate_option_name(&option.name, field.span())?;
+
+                option.r#type = type_;
+                option.required = required;
+
+                fields.push(option);
+            }
+        }
+
+        Ok(Self { fields })
+    }
+
+    fn parse_type(r#type: &syn::Type) -> syn::Result<(CommandOptionType, bool)> {
+        let type_path = match r#type {
+            syn::Type::Path(p) => p,
+            _ => return Err(syn::Error::new(r#type.span(), "Unsupported type.")),
+        };
+
+        let segment = type_path
+            .path
+            .segments
+            .last()
+            .ok_or_else(|| syn::Error::new(r#type.span(), "Invalid type."))?;
+
+        if segment.ident == "Option" {
+            return Self::parse_option_type(segment, r#type);
+        }
+
+        Ok((Self::get_inner_type(r#type)?, true))
+    }
+
+    fn parse_option_type(
+        segment: &syn::PathSegment,
+        r#type: &syn::Type,
+    ) -> syn::Result<(CommandOptionType, bool)> {
+        let args = match &segment.arguments {
+            syn::PathArguments::AngleBracketed(args) => args,
+            _ => return Err(syn::Error::new(r#type.span(), "Invalid Option type.")),
+        };
+
+        let inner_type = match args.args.first() {
+            Some(syn::GenericArgument::Type(t)) => t,
+            _ => return Err(syn::Error::new(r#type.span(), "Invalid Option type.")),
+        };
+
+        Ok((Self::get_inner_type(inner_type)?, false))
+    }
+
+    fn get_inner_type(r#type: &syn::Type) -> syn::Result<CommandOptionType> {
+        let type_path = match r#type {
+            syn::Type::Path(p) => p,
+            _ => return Err(syn::Error::new(r#type.span(), "Unsupported type.")),
+        };
+
+        let segment = type_path
+            .path
+            .segments
+            .last()
+            .ok_or_else(|| syn::Error::new(r#type.span(), "Invalid type."))?;
+
+        match segment.ident.to_string().as_str() {
+            "String" => Ok(CommandOptionType::String),
+            "i64" => Ok(CommandOptionType::Integer),
+            "f64" => Ok(CommandOptionType::Number),
+            "bool" => Ok(CommandOptionType::Boolean),
+            "Id" => Self::parse_id_type(segment, r#type),
+            _ => Err(syn::Error::new(r#type.span(), "Unsupported type.")),
+        }
+    }
+
+    fn parse_id_type(
+        segment: &syn::PathSegment,
+        r#type: &syn::Type,
+    ) -> syn::Result<CommandOptionType> {
+        let args = match &segment.arguments {
+            syn::PathArguments::AngleBracketed(args) => args,
+            _ => return Err(syn::Error::new(r#type.span(), "Invalid Id type.")),
+        };
+
+        let inner_type = match args.args.first() {
+            Some(syn::GenericArgument::Type(t)) => t,
+            _ => return Err(syn::Error::new(r#type.span(), "Invalid Id type.")),
+        };
+
+        let inner_path = match inner_type {
+            syn::Type::Path(p) => p,
+            _ => return Err(syn::Error::new(inner_type.span(), "Invalid type.")),
+        };
+
+        let inner_segment = inner_path
+            .path
+            .segments
+            .last()
+            .ok_or_else(|| syn::Error::new(inner_type.span(), "Invalid type."))?;
+
+        match inner_segment.ident.to_string().as_str() {
+            "UserMarker" => Ok(CommandOptionType::User),
+            "ChannelMarker" => Ok(CommandOptionType::Channel),
+            "RoleMarker" => Ok(CommandOptionType::Role),
+            "AttachmentMarker" => Ok(CommandOptionType::Attachment),
+            _ => Err(syn::Error::new(inner_type.span(), "Unsupported type.")),
+        }
+    }
+
+    fn validate_option_name(name: &str, span: proc_macro2::Span) -> syn::Result<()> {
+        command::option_name(name).map_err(|error| syn::Error::new(span, error))
+    }
+}
+
+// impl syn::parse::Parse for CommandOptionField {
+//     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+//         let fields =
+//             syn::punctuated::Punctuated::<syn::MetaNameValue, syn::Token![,]>::parse_terminated(
+//                 input,
+//             )?;
+
+//         let mut description = String::default();
+
+//         for field in fields {
+//             if field.path.is_ident("description") {
+//                 if let syn::Expr::Lit(syn::ExprLit {
+//                     lit: syn::Lit::Str(lit_str),
+//                     ..
+//                 }) = field.value
+//                 {
+//                     description = lit_str.value();
+//                     Self::validate_description(&description, lit_str.span())?;
+//                 }
+//             }
+//         }
+
+//         Ok(Self {
+//             description,
+//             ..Default::default()
+//         })
+//     }
+// }
+
+// impl CommandOptionField {
+//     fn validate_description(description: &str, span: proc_macro2::Span) -> syn::Result<()> {
+//         command::description(description).map_err(|error| syn::Error::new(span, error))
+//     }
+// }
+
+// impl CommandOptionAttributeFields {
+//     pub fn parse_attrs(input: &syn::DeriveInput) -> syn::Result<CommandOptionAttributeFields> {
+//         let mut fields = Vec::new();
+
+//         if let syn::Data::Struct(data) = &input.data {
+//             if let syn::Fields::Named(named_fields) = &data.fields {
+//                 for field in &named_fields.named {
+//                     if let Some(attr) = field
+//                         .attrs
+//                         .iter()
+//                         .find(|attr| attr.path().is_ident("option"))
+//                     {
+//                         let mut option = attr.parse_args::<CommandOptionField>()?;
+//                         let (r#type, required) = Self::parse_type(&field.ty)?;
+
+//                         option.name =
+//                             field.ident.as_ref().map(|i| i.to_string()).ok_or_else(|| {
+//                                 syn::Error::new(field.span(), "Unnamed fields are not supported.")
+//                             })?;
+//                         option.r#type = r#type;
+//                         option.required = required;
+
+//                         fields.push(option)
+//                     }
+//                 }
+//             }
+//         }
+
+//         Ok(Self { fields })
+//     }
+
+//     fn parse_type(r#type: &syn::Type) -> syn::Result<(CommandOptionType, bool)> {
+//         match r#type {
+//             syn::Type::Path(type_path) => {
+//                 let segment = type_path
+//                     .path
+//                     .segments
+//                     .last()
+//                     .ok_or_else(|| syn::Error::new(r#type.span(), "Invalid type."))?;
+
+//                 if segment.ident.to_string().as_str() == "Option" {
+//                     if let syn::PathArguments::AngleBracketed(args) = &segment.arguments {
+//                         if let Some(syn::GenericArgument::Type(inner_type)) = args.args.first() {
+//                             return Ok((Self::get_inner_type(inner_type)?, false));
+//                         }
+//                     }
+//                     return Err(syn::Error::new(r#type.span(), "Invalid Option type."));
+//                 }
+
+//                 Ok((Self::get_inner_type(r#type)?, true))
+//             }
+//             _ => Err(syn::Error::new(r#type.span(), "Unsupported type.")),
+//         }
+//     }
+
+//     fn get_inner_type(r#type: &syn::Type) -> syn::Result<CommandOptionType> {
+//         if let syn::Type::Path(type_path) = r#type {
+//             let segment = type_path
+//                 .path
+//                 .segments
+//                 .last()
+//                 .ok_or_else(|| syn::Error::new(r#type.span(), "Invalid type."))?;
+
+//             match segment.ident.to_string().as_str() {
+//                 "String" => Ok(CommandOptionType::String),
+//                 "i64" => Ok(CommandOptionType::Integer),
+//                 "f64" => Ok(CommandOptionType::Number),
+//                 "bool" => Ok(CommandOptionType::Boolean),
+//                 "Id" => {
+//                     if let syn::PathArguments::AngleBracketed(args) = &segment.arguments {
+//                         if let Some(syn::GenericArgument::Type(inner_type)) = args.args.first() {
+//                             let inner_segment = if let syn::Type::Path(type_path) = inner_type {
+//                                 type_path.path.segments.last().ok_or_else(|| {
+//                                     syn::Error::new(inner_type.span(), "Invalid type.")
+//                                 })?
+//                             } else {
+//                                 return Err(syn::Error::new(inner_type.span(), "Invalid type."));
+//                             };
+//                             match inner_segment.ident.to_string().as_str() {
+//                                 "UserMarker" => Ok(CommandOptionType::User),
+//                                 "ChannelMarker" => Ok(CommandOptionType::Channel),
+//                                 "RoleMarker" => Ok(CommandOptionType::Role),
+//                                 "AttachmentMarker" => Ok(CommandOptionType::Attachment),
+//                                 _ => Err(syn::Error::new(inner_type.span(), "Unsupported type.")),
+//                             }
+//                         } else {
+//                             Err(syn::Error::new(r#type.span(), "Invalid Id type."))
+//                         }
+//                     } else {
+//                         Err(syn::Error::new(r#type.span(), "Invalid Id type."))
+//                     }
+//                 }
+//                 _ => Err(syn::Error::new(r#type.span(), "Unsupported type.")),
+//             }
+//         } else {
+//             Err(syn::Error::new(r#type.span(), "Unsupported type."))
+//         }
+//     }
+// }

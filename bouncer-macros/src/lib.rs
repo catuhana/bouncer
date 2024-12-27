@@ -1,4 +1,4 @@
-use attributes::command::CommandAttributeFields;
+use attributes::{command::CommandAttributeFields, option::CommandOptionAttributeFields};
 
 use proc_macro::TokenStream;
 use syn::parse_macro_input;
@@ -7,7 +7,7 @@ extern crate proc_macro;
 
 mod attributes;
 
-#[proc_macro_derive(BouncerCommand, attributes(command))]
+#[proc_macro_derive(BouncerCommand, attributes(command, option))]
 pub fn bouncer_command_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as syn::DeriveInput);
 
@@ -15,10 +15,10 @@ pub fn bouncer_command_derive(input: proc_macro::TokenStream) -> proc_macro::Tok
         Ok(attrs) => attrs,
         Err(error) => return error.to_compile_error().into(),
     };
-
-    // let struct_name = &input.ident;
-
-    // TokenStream::from(expanded)
+    let option_attrs = match CommandOptionAttributeFields::parse_attrs(&input) {
+        Ok(attrs) => attrs,
+        Err(error) => return error.to_compile_error().into(),
+    };
 
     TokenStream::default()
 }
