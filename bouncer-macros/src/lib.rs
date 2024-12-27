@@ -1,6 +1,6 @@
 use attributes::{command::CommandAttributeFields, option::CommandOptionAttributeFields};
 
-use proc_macro::TokenStream;
+use quote::quote;
 use syn::parse_macro_input;
 
 extern crate proc_macro;
@@ -15,10 +15,27 @@ pub fn bouncer_command_derive(input: proc_macro::TokenStream) -> proc_macro::Tok
         Ok(attrs) => attrs,
         Err(error) => return error.to_compile_error().into(),
     };
-    let option_attrs = match CommandOptionAttributeFields::parse_attrs(&input) {
+    let _option_attrs = match CommandOptionAttributeFields::parse_attrs(&input) {
         Ok(attrs) => attrs,
         Err(error) => return error.to_compile_error().into(),
     };
 
-    TokenStream::default()
+    let struct_name = &input.ident;
+
+    let command_name = &command_attrs.name;
+    let command_description = &command_attrs.description;
+
+    let expanded = quote! {
+        #[async_trait::async_trait]
+        impl bouncer_framework::command::Command for #struct_name {
+            const COMMAND_NAME: &'static str = #command_name;
+            const COMMAND_DESCRIPTION: &'static str = #command_description;
+
+            async fn execute(&self) -> Result<(), bouncer_framework::command::CommandExecuteError> {
+                todo!()
+            }
+        }
+    };
+
+    proc_macro::TokenStream::from(expanded)
 }
