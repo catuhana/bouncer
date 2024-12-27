@@ -18,7 +18,11 @@ impl syn::parse::Parse for CommandAttributeFields {
 
         for field in fields {
             match (
-                field.path.get_ident().map(|i| i.to_string()).as_deref(),
+                field
+                    .path
+                    .get_ident()
+                    .map(std::string::ToString::to_string)
+                    .as_deref(),
                 field.value,
             ) {
                 (
@@ -50,13 +54,13 @@ impl syn::parse::Parse for CommandAttributeFields {
 }
 
 impl CommandAttributeFields {
-    pub fn parse_attrs(input: &syn::DeriveInput) -> syn::Result<CommandAttributeFields> {
+    pub fn parse_attrs(input: &syn::DeriveInput) -> syn::Result<Self> {
         input
             .attrs
             .iter()
             .find(|attr| attr.path().is_ident("command"))
-            .ok_or_else(|| syn::Error::new_spanned(&input, "missing #[command] attribute"))
-            .and_then(|attr| attr.parse_args::<CommandAttributeFields>())
+            .ok_or_else(|| syn::Error::new_spanned(input, "missing #[command] attribute"))
+            .and_then(syn::Attribute::parse_args)
     }
 
     fn validate_name(name: &str, span: proc_macro2::Span) -> syn::Result<()> {

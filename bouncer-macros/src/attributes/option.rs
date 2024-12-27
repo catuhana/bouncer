@@ -71,14 +71,12 @@ impl syn::parse::Parse for CommandOptionField {
 
 impl CommandOptionAttributeFields {
     pub fn parse_attrs(input: &syn::DeriveInput) -> syn::Result<Self> {
-        let data = match &input.data {
-            syn::Data::Struct(data) => data,
-            _ => return Ok(Self { fields: Vec::new() }),
+        let syn::Data::Struct(data) = &input.data else {
+            return Ok(Self { fields: Vec::new() });
         };
 
-        let named_fields = match &data.fields {
-            syn::Fields::Named(fields) => fields,
-            _ => return Ok(Self { fields: Vec::new() }),
+        let syn::Fields::Named(named_fields) = &data.fields else {
+            return Ok(Self { fields: Vec::new() });
         };
 
         let mut fields = Vec::new();
@@ -91,9 +89,13 @@ impl CommandOptionAttributeFields {
                 let mut option = attr.parse_args::<CommandOptionField>()?;
                 let (type_, required) = Self::parse_type(&field.ty)?;
 
-                option.name = field.ident.as_ref().map(|i| i.to_string()).ok_or_else(|| {
-                    syn::Error::new(field.span(), "Unnamed fields are not supported.")
-                })?;
+                option.name = field
+                    .ident
+                    .as_ref()
+                    .map(std::string::ToString::to_string)
+                    .ok_or_else(|| {
+                        syn::Error::new(field.span(), "Unnamed fields are not supported.")
+                    })?;
                 Self::validate_option_name(&option.name, field.span())?;
 
                 option.r#type = type_;
@@ -107,9 +109,8 @@ impl CommandOptionAttributeFields {
     }
 
     fn parse_type(r#type: &syn::Type) -> syn::Result<(CommandOptionType, bool)> {
-        let type_path = match r#type {
-            syn::Type::Path(p) => p,
-            _ => return Err(syn::Error::new(r#type.span(), "Unsupported type.")),
+        let syn::Type::Path(type_path) = r#type else {
+            return Err(syn::Error::new(r#type.span(), "Unsupported type."));
         };
 
         let segment = type_path
@@ -129,23 +130,20 @@ impl CommandOptionAttributeFields {
         segment: &syn::PathSegment,
         r#type: &syn::Type,
     ) -> syn::Result<(CommandOptionType, bool)> {
-        let args = match &segment.arguments {
-            syn::PathArguments::AngleBracketed(args) => args,
-            _ => return Err(syn::Error::new(r#type.span(), "Invalid Option type.")),
+        let syn::PathArguments::AngleBracketed(args) = &segment.arguments else {
+            return Err(syn::Error::new(r#type.span(), "Invalid Option type."));
         };
 
-        let inner_type = match args.args.first() {
-            Some(syn::GenericArgument::Type(t)) => t,
-            _ => return Err(syn::Error::new(r#type.span(), "Invalid Option type.")),
+        let Some(syn::GenericArgument::Type(inner_type)) = args.args.first() else {
+            return Err(syn::Error::new(r#type.span(), "Invalid Option type."));
         };
 
         Ok((Self::get_inner_type(inner_type)?, false))
     }
 
     fn get_inner_type(r#type: &syn::Type) -> syn::Result<CommandOptionType> {
-        let type_path = match r#type {
-            syn::Type::Path(p) => p,
-            _ => return Err(syn::Error::new(r#type.span(), "Unsupported type.")),
+        let syn::Type::Path(type_path) = r#type else {
+            return Err(syn::Error::new(r#type.span(), "Unsupported type."));
         };
 
         let segment = type_path
@@ -168,19 +166,16 @@ impl CommandOptionAttributeFields {
         segment: &syn::PathSegment,
         r#type: &syn::Type,
     ) -> syn::Result<CommandOptionType> {
-        let args = match &segment.arguments {
-            syn::PathArguments::AngleBracketed(args) => args,
-            _ => return Err(syn::Error::new(r#type.span(), "Invalid Id type.")),
+        let syn::PathArguments::AngleBracketed(args) = &segment.arguments else {
+            return Err(syn::Error::new(r#type.span(), "Invalid Id type."));
         };
 
-        let inner_type = match args.args.first() {
-            Some(syn::GenericArgument::Type(t)) => t,
-            _ => return Err(syn::Error::new(r#type.span(), "Invalid Id type.")),
+        let Some(syn::GenericArgument::Type(inner_type)) = args.args.first() else {
+            return Err(syn::Error::new(r#type.span(), "Invalid Id type."));
         };
 
-        let inner_path = match inner_type {
-            syn::Type::Path(p) => p,
-            _ => return Err(syn::Error::new(inner_type.span(), "Invalid type.")),
+        let syn::Type::Path(inner_path) = inner_type else {
+            return Err(syn::Error::new(inner_type.span(), "Invalid type."));
         };
 
         let inner_segment = inner_path
