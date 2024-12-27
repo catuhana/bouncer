@@ -1,5 +1,5 @@
 [workspace]
-members = ["bouncer", "bouncer-cli", "bouncer-config", "bouncer-framework"]
+members = ["bouncer", "bouncer-cli", "bouncer-config", "bouncer-framework", "bouncer-macros"]
 resolver = "2"
 
 [workspace.package]

@@ -155,6 +155,7 @@ dependencies = [
  "bouncer-cli",
  "bouncer-config",
  "bouncer-framework",
+ "bouncer-macros",
  "tokio",
  "tracing",
  "tracing-subscriber",
@@ -162,6 +163,7 @@ dependencies = [
  "twilight-gateway",
  "twilight-http",
  "twilight-model",
+ "twilight-util",
 ]
 
 [[package]]
@@ -193,12 +195,23 @@ dependencies = [
  "async-trait",
  "paste",
  "secrecy",
+ "thiserror",
  "tokio",
  "tracing",
  "twilight-cache-inmemory",
  "twilight-gateway",
  "twilight-http",
  "twilight-model",
+]
+
+[[package]]
+name = "bouncer-macros"
+version = "0.0.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+ "twilight-validate",
 ]
 
 [[package]]
@@ -853,9 +866,9 @@ dependencies = [
 
 [[package]]
 name = "quote"
-version = "1.0.37"
+version = "1.0.38"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b5b9d34b8991d19d98081b46eacdd8eb58c6f2b201139f7c5f643cc155a633af"
+checksum = "0e4dccaaaf89514f546c693ddc140f729f958c247918a13380cccc6078391acc"
 dependencies = [
  "proc-macro2",
 ]
@@ -1460,6 +1473,16 @@ dependencies = [
  "serde-value",
  "serde_repr",
  "time",
+]
+
+[[package]]
+name = "twilight-util"
+version = "0.16.0-rc.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4c8a5a519ea63090a9e009974bf25e8cb3be9284da7248011ed37377d4180295"
+dependencies = [
+ "twilight-model",
+ "twilight-validate",
 ]
 
 [[package]]
