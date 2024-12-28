@@ -43,14 +43,25 @@ impl EventHandler for Events {
     async fn interaction_create(&self, _: Context, interaction: Box<InteractionCreate>) {
         match interaction.data.as_ref() {
             Some(InteractionData::ApplicationCommand(command)) => {
-                match commands::Commands::parse_from_command_name(&command.name, &command.options) {
-                    Ok(commands) => match commands {
-                        commands::Commands::Meow(command) => {
-                            // TODO: Handle error.
-                            command.execute().await.unwrap();
-                        }
-                    },
-                    Err(error) => tracing::error!("{}", error),
+                let command = match commands::Commands::parse_from_command_name(
+                    &command.name,
+                    &command.options,
+                ) {
+                    Ok(cmd) => cmd,
+                    Err(error) => {
+                        tracing::error!(?error, "Failed to parse command");
+                        return;
+                    }
+                };
+
+                // TODO: Find a way to simplify this when there
+                // are many commands. Related to `./commands/mod.rs`
+                let result = match command {
+                    commands::Commands::Meow(command) => command.execute().await,
+                };
+
+                if let Err(error) = result {
+                    tracing::error!(?error, "Failed to handle command");
                 }
             }
             interaction => {
