@@ -17,14 +17,12 @@ pub struct CommandOptionField {
 #[derive(Default)]
 pub enum CommandOptionType {
     #[default]
-    String,
-    Integer,
-    Number,
     Boolean,
-    User,
     Channel,
+    Integer,
+    User,
     Role,
-    Attachment,
+    String,
 }
 
 impl CommandOptionField {
@@ -157,10 +155,9 @@ impl CommandOptionAttributeFields {
             .ok_or_else(|| syn::Error::new(r#type.span(), "Invalid type."))?;
 
         match segment.ident.to_string().as_str() {
-            "String" => Ok(CommandOptionType::String),
-            "i64" => Ok(CommandOptionType::Integer),
-            "f64" => Ok(CommandOptionType::Number),
             "bool" => Ok(CommandOptionType::Boolean),
+            "i64" => Ok(CommandOptionType::Integer),
+            "String" => Ok(CommandOptionType::String),
             "Id" => Self::parse_id_type(segment, r#type),
             _ => Err(syn::Error::new(r#type.span(), "Unsupported type.")),
         }
@@ -189,10 +186,9 @@ impl CommandOptionAttributeFields {
             .ok_or_else(|| syn::Error::new(inner_type.span(), "Invalid type."))?;
 
         match inner_segment.ident.to_string().as_str() {
-            "UserMarker" => Ok(CommandOptionType::User),
             "ChannelMarker" => Ok(CommandOptionType::Channel),
+            "UserMarker" => Ok(CommandOptionType::User),
             "RoleMarker" => Ok(CommandOptionType::Role),
-            "AttachmentMarker" => Ok(CommandOptionType::Attachment),
             _ => Err(syn::Error::new(inner_type.span(), "Unsupported type.")),
         }
     }
@@ -241,230 +237,64 @@ impl CommandOptionAttributeFields {
         Ok(())
     }
 
-    // TODO: Pretty sure this can be simplified.
     pub fn generate_option_builder(field: &CommandOptionField) -> proc_macro2::TokenStream {
         let name = &field.name;
         let description = &field.description;
+        let set_required = field.required.then(|| quote! { .required(true) });
 
-        match &field.r#type {
-            CommandOptionType::String => {
-                let set_required = field.required.then(|| quote! { .required(true) });
-
-                quote! {
-                    builder = builder.option(
-                        twilight_util::builder::command::StringBuilder::new(#name, #description)
-                        #set_required
-                        .build()
-                    );
-                }
+        let builder_name = format_ident!(
+            "{}Builder",
+            match field.r#type {
+                CommandOptionType::String => "String",
+                CommandOptionType::Boolean => "Boolean",
+                CommandOptionType::Channel => "Channel",
+                CommandOptionType::Integer => "Integer",
+                CommandOptionType::Role => "Role",
+                CommandOptionType::User => "User",
             }
-            CommandOptionType::Attachment => {
-                let set_required = field.required.then(|| quote! { .required(true) });
+        );
 
-                quote! {
-                    builder = builder.option(
-                        twilight_util::builder::command::AttachmentBuilder::new(#name, #description)
-                        #set_required
-                        .build()
-                    );
-                }
-            }
-            CommandOptionType::Boolean => {
-                let set_required = field.required.then(|| quote! { .required(true) });
-
-                quote! {
-                    builder = builder.option(
-                        twilight_util::builder::command::BooleanBuilder::new(#name, #description)
-                        #set_required
-                        .build()
-                    );
-                }
-            }
-            CommandOptionType::Channel => {
-                let set_required = field.required.then(|| quote! { .required(true) });
-
-                quote! {
-                    builder = builder.option(
-                        twilight_util::builder::command::ChannelBuilder::new(#name, #description)
-                        #set_required
-                        .build()
-                    );
-                }
-            }
-            CommandOptionType::Integer => {
-                let set_required = field.required.then(|| quote! { .required(true) });
-
-                quote! {
-                    builder = builder.option(
-                        twilight_util::builder::command::IntegerBuilder::new(#name, #description)
-                        #set_required
-                        .build()
-                    );
-                }
-            }
-            CommandOptionType::Number => {
-                let set_required = field.required.then(|| quote! { .required(true) });
-
-                quote! {
-                    builder = builder.option(
-                        twilight_util::builder::command::NumberBuilder::new(#name, #description)
-                        #set_required
-                        .build()
-                    );
-                }
-            }
-            CommandOptionType::Role => {
-                let set_required = field.required.then(|| quote! { .required(true) });
-
-                quote! {
-                    builder = builder.option(
-                        twilight_util::builder::command::RoleBuilder::new(#name, #description)
-                        #set_required
-                        .build()
-                    );
-                }
-            }
-            CommandOptionType::User => {
-                let set_required = field.required.then(|| quote! { .required(true) });
-
-                quote! {
-                    builder = builder.option(
-                        twilight_util::builder::command::UserBuilder::new(#name, #description)
-                        #set_required
-                        .build()
-                    );
-                }
-            }
+        quote! {
+            builder = builder.option(
+                twilight_util::builder::command::#builder_name::new(#name, #description)
+                #set_required
+                .build()
+            );
         }
     }
 
-    // TODO: Ditto.
     pub fn generate_option_parser(field: &CommandOptionField) -> proc_macro2::TokenStream {
         let name = &field.name;
         let name_ident = format_ident!("{}", name);
-        let r#type = &field.r#type;
+        // TODO: Don't use `expect` here.
+        let unwrap_non_option = field
+            .required
+            .then(|| quote! { .expect("Option is required") });
 
-        match r#type {
-            CommandOptionType::String => {
-                let unwrap_non_option = field
-                    .required
-                    .then(|| quote! { .expect("Option is required") });
-
-                quote! {
-                    let #name_ident = options
-                        .iter()
-                        .find(|option| option.name == #name)
-                        .map(|option| match &option.value {
-                            twilight_model::application::interaction::application_command::CommandOptionValue::String(s) => s.to_owned(),
-                            _ => todo!("throw error here. even though the value MUST exist, i think we still should handle some cases"),
-                        })#unwrap_non_option;
-                }
+        let generate_parser = |value_type: proc_macro2::TokenStream,
+                               value_pat: proc_macro2::TokenStream| {
+            quote! {
+                let #name_ident = options
+                    .iter()
+                    .find(|option| option.name == #name)
+                    .map(|option| match &option.value {
+                        twilight_model::application::interaction::application_command::CommandOptionValue::#value_type(#value_pat) => #value_pat.to_owned(),
+                        _ => todo!("Handle invalid option type"),
+                        // _ => return Err(bouncer_framework::command::CommandOptionsError::InvalidOptionType {
+                        //     option_name: #name.to_string(),
+                        //     expected_type: stringify!(#value_type).to_string(),
+                        // }),
+                    })#unwrap_non_option;
             }
-            CommandOptionType::Attachment => {
-                let unwrap_non_option = field
-                    .required
-                    .then(|| quote! { .expect("Option is required") });
+        };
 
-                quote! {
-                    let #name_ident = options
-                        .iter()
-                        .find(|option| option.name == #name)
-                        .map(|option| match option.value {
-                            twilight_model::application::interaction::application_command::CommandOptionValue::Attachment(a) => a,
-                            _ => todo!("throw error here. even though the value MUST exist, i think we still should handle some cases"),
-                        })#unwrap_non_option;
-                }
-            }
-            CommandOptionType::Boolean => {
-                let unwrap_non_option = field
-                    .required
-                    .then(|| quote! { .expect("Option is required") });
-
-                quote! {
-                    let #name_ident = options
-                        .iter()
-                        .find(|option| option.name == #name)
-                        .map(|option| match option.value {
-                            twilight_model::application::interaction::application_command::CommandOptionValue::Boolean(b) => b,
-                            _ => todo!("throw error here. even though the value MUST exist, i think we still should handle some cases"),
-                        })#unwrap_non_option;
-                }
-            }
-            CommandOptionType::Channel => {
-                let unwrap_non_option = field
-                    .required
-                    .then(|| quote! { .expect("Option is required") });
-
-                quote! {
-                    let #name_ident = options
-                        .iter()
-                        .find(|option| option.name == #name)
-                        .map(|option| match option.value {
-                            twilight_model::application::interaction::application_command::CommandOptionValue::Channel(c) => c,
-                            _ => todo!("throw error here. even though the value MUST exist, i think we still should handle some cases"),
-                        })#unwrap_non_option;
-                }
-            }
-            CommandOptionType::Integer => {
-                let unwrap_non_option = field
-                    .required
-                    .then(|| quote! { .expect("Option is required") });
-
-                quote! {
-                    let #name_ident = options
-                        .iter()
-                        .find(|option| option.name == #name)
-                        .map(|option| match option.value {
-                            twilight_model::application::interaction::application_command::CommandOptionValue::Integer(i) => i,
-                            _ => todo!("throw error here. even though the value MUST exist, i think we still should handle some cases"),
-                        })#unwrap_non_option;
-                }
-            }
-            CommandOptionType::Number => {
-                let unwrap_non_option = field
-                    .required
-                    .then(|| quote! { .expect("Option is required") });
-
-                quote! {
-                    let #name_ident = options
-                        .iter()
-                        .find(|option| option.name == #name)
-                        .map(|option| match option.value {
-                            twilight_model::application::interaction::application_command::CommandOptionValue::Number(n) => n,
-                            _ => todo!("throw error here. even though the value MUST exist, i think we still should handle some cases"),
-                        })#unwrap_non_option;
-                }
-            }
-            CommandOptionType::Role => {
-                let unwrap_non_option = field
-                    .required
-                    .then(|| quote! { .expect("Option is required") });
-
-                quote! {
-                    let #name_ident = options
-                        .iter()
-                        .find(|option| option.name == #name)
-                        .map(|option| match option.value {
-                            twilight_model::application::interaction::application_command::CommandOptionValue::Role(r) => r,
-                            _ => todo!("throw error here. even though the value MUST exist, i think we still should handle some cases"),
-                        })#unwrap_non_option;
-                }
-            }
-            CommandOptionType::User => {
-                let unwrap_non_option = field
-                    .required
-                    .then(|| quote! { .expect("Option is required") });
-
-                quote! {
-                    let #name_ident = options
-                        .iter()
-                        .find(|option| option.name == #name)
-                        .map(|option| match option.value {
-                            twilight_model::application::interaction::application_command::CommandOptionValue::User(u) => u,
-                            _ => todo!("throw error here. even though the value MUST exist, i think we still should handle some cases"),
-                        })#unwrap_non_option;
-                }
-            }
+        match field.r#type {
+            CommandOptionType::String => generate_parser(quote!(String), quote!(string)),
+            CommandOptionType::Integer => generate_parser(quote!(Integer), quote!(integer)),
+            CommandOptionType::Boolean => generate_parser(quote!(Boolean), quote!(boolean)),
+            CommandOptionType::User => generate_parser(quote!(User), quote!(user)),
+            CommandOptionType::Channel => generate_parser(quote!(Channel), quote!(channel)),
+            CommandOptionType::Role => generate_parser(quote!(Role), quote!(role)),
         }
     }
 }
