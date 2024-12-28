@@ -9,17 +9,17 @@ use twilight_model::id::{
 #[command(name = "meow", description = "Meow!")]
 pub struct MeowCommand {
     #[option(description = "Test string option")]
-    test_string_option: String,
+    _string_option: String,
     #[option(description = "Test integer option")]
-    test_integer_option: i64,
+    _integer_option: i64,
     #[option(description = "Test boolean option")]
-    test_boolean_option: bool,
+    _boolean_option: bool,
     #[option(description = "Test user option")]
-    test_user_option: Id<UserMarker>,
+    _user_option: Id<UserMarker>,
     #[option(description = "Test channel option")]
-    test_channel_option: Id<ChannelMarker>,
+    _channel_option: Id<ChannelMarker>,
     #[option(description = "Test role option")]
-    test_role_option: Id<RoleMarker>,
+    _role_option: Id<RoleMarker>,
 }
 
 #[async_trait::async_trait]
