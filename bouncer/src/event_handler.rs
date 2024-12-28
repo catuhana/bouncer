@@ -55,7 +55,7 @@ impl EventHandler for Events {
                 ) {
                     Ok(cmd) => cmd,
                     Err(error) => {
-                        tracing::error!(?error, "Failed to parse command");
+                        tracing::error!(?error, "failed to parse command");
                         return;
                     }
                 };
@@ -67,11 +67,11 @@ impl EventHandler for Events {
                 };
 
                 if let Err(error) = result {
-                    tracing::error!(?error, "Failed to handle command");
+                    tracing::error!(?error, "failed to handle command");
                 }
             }
             interaction => {
-                tracing::warn!("Unhandled interaction type {:?}", interaction);
+                tracing::warn!("unhandled interaction type {:?}", interaction);
             }
         }
     }
