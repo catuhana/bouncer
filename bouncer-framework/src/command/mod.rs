@@ -8,6 +8,8 @@ pub trait CommandData {
     const COMMAND_NAME: &'static str;
     const COMMAND_DESCRIPTION: &'static str;
 
+    // TODO: Validate that the command is valid with
+    // `CommandBuilder::validate`.
     fn command() -> TwilightCommand;
     fn command_builder() -> CommandBuilder {
         CommandBuilder::new(

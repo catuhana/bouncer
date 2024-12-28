@@ -243,17 +243,14 @@ impl CommandOptionAttributeFields {
         let description = &field.description;
         let set_required = field.required.then(|| quote! { .required(true) });
 
-        let builder_name = format_ident!(
-            "{}Builder",
-            match field.r#type {
-                CommandOptionType::String => "String",
-                CommandOptionType::Boolean => "Boolean",
-                CommandOptionType::Channel => "Channel",
-                CommandOptionType::Integer => "Integer",
-                CommandOptionType::Role => "Role",
-                CommandOptionType::User => "User",
-            }
-        );
+        let builder_name = format_ident!("{}Builder", match field.r#type {
+            CommandOptionType::String => "String",
+            CommandOptionType::Boolean => "Boolean",
+            CommandOptionType::Channel => "Channel",
+            CommandOptionType::Integer => "Integer",
+            CommandOptionType::Role => "Role",
+            CommandOptionType::User => "User",
+        });
 
         quote! {
             builder = builder.option(

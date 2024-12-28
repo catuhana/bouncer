@@ -1,8 +1,8 @@
 use std::path::Path;
 
 use figment::{
-    providers::{Env, Format as _, Yaml},
     Figment,
+    providers::{Env, Format as _, Yaml},
 };
 
 pub mod discord;
