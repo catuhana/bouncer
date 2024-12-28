@@ -9,7 +9,7 @@ use crate::commands;
 pub struct Events;
 
 impl Events {
-    pub async fn register_commands(context: Context) -> Result<(), EventsError> {
+    pub async fn register_commands(context: Context) -> Result<Vec<String>, EventsError> {
         let application_id = context
             .http
             .current_user_application()
@@ -18,13 +18,18 @@ impl Events {
             .await?
             .id;
 
-        context
+        let registred_commands = context
             .http
             .interaction(application_id)
             .set_global_commands(&commands::Commands::all_commands())
+            .await?
+            .model()
             .await?;
 
-        Ok(())
+        Ok(registred_commands
+            .iter()
+            .map(|command| command.name.to_owned())
+            .collect())
     }
 }
 
@@ -34,8 +39,9 @@ impl EventHandler for Events {
         tracing::info!("Bouncer is ready as {}", ready.user.name);
 
         match Self::register_commands(context).await {
-            // TODO: Maybe list registered commands.
-            Ok(()) => tracing::info!("commands registered"),
+            Ok(registered_command_names) => {
+                tracing::info!("registered command names: {:?}", registered_command_names)
+            }
             Err(error) => tracing::error!("{}", error),
         }
     }
