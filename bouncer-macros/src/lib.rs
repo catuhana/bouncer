@@ -1,6 +1,7 @@
 use attributes::{command::CommandAttributeFields, option::CommandOptionAttributeFields};
 
-use quote::quote;
+use itertools::multiunzip;
+use quote::{format_ident, quote};
 use syn::parse_macro_input;
 
 extern crate proc_macro;
@@ -15,10 +16,22 @@ pub fn bouncer_command_derive(input: proc_macro::TokenStream) -> proc_macro::Tok
         Ok(attrs) => attrs,
         Err(error) => return error.to_compile_error().into(),
     };
-    let _option_attrs = match CommandOptionAttributeFields::parse_attrs(&input) {
+
+    let option_attrs = match CommandOptionAttributeFields::parse_attrs(&input) {
         Ok(attrs) => attrs,
         Err(error) => return error.to_compile_error().into(),
     };
+    let (option_builders, option_parsed, option_attr_idents): (
+        Vec<_>,
+        Vec<_>,
+        Vec<proc_macro2::Ident>,
+    ) = multiunzip(option_attrs.fields.iter().map(|attr| {
+        (
+            CommandOptionAttributeFields::generate_option_builder(attr),
+            CommandOptionAttributeFields::generate_option_parser(attr),
+            format_ident!("{}", &attr.name),
+        )
+    }));
 
     let struct_name = &input.ident;
 
@@ -26,13 +39,29 @@ pub fn bouncer_command_derive(input: proc_macro::TokenStream) -> proc_macro::Tok
     let command_description = &command_attrs.description;
 
     let expanded = quote! {
-        #[async_trait::async_trait]
-        impl bouncer_framework::command::Command for #struct_name {
+        impl bouncer_framework::command::CommandData for #struct_name {
             const COMMAND_NAME: &'static str = #command_name;
             const COMMAND_DESCRIPTION: &'static str = #command_description;
 
-            async fn execute(&self) -> Result<(), bouncer_framework::command::CommandExecuteError> {
-                todo!()
+            fn command() -> twilight_model::application::command::Command {
+                let mut builder = Self::command_builder();
+                #(#option_builders)*
+                builder.build()
+            }
+        }
+
+        impl bouncer_framework::command::CommandOptions for #struct_name {
+            fn parse_options(
+                options: &[twilight_model::application::interaction::application_command::CommandDataOption],
+            ) -> Result<Self, bouncer_framework::command::CommandOptionsError>
+            where
+                Self: Sized,
+            {
+                #(#option_parsed)*
+
+                Ok(Self {
+                    #(#option_attr_idents,)*
+                })
             }
         }
     };

@@ -18,3 +18,4 @@ twilight-cache-inmemory.workspace = true
 twilight-gateway.workspace = true
 twilight-http.workspace = true
 twilight-model.workspace = true
+twilight-util = { workspace = true, features = ["builder"] }

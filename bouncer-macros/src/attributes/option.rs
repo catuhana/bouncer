@@ -1,3 +1,4 @@
+use quote::{format_ident, quote};
 use syn::spanned::Spanned as _;
 use twilight_validate::command;
 
@@ -105,7 +106,10 @@ impl CommandOptionAttributeFields {
             }
         }
 
-        Ok(Self { fields })
+        let result_struct = Self { fields };
+        result_struct.validate_option_order()?;
+
+        Ok(result_struct)
     }
 
     fn parse_type(r#type: &syn::Type) -> syn::Result<(CommandOptionType, bool)> {
@@ -195,5 +199,287 @@ impl CommandOptionAttributeFields {
 
     fn validate_option_name(name: &str, span: proc_macro2::Span) -> syn::Result<()> {
         command::option_name(name).map_err(|error| syn::Error::new(span, error))
+    }
+
+    fn validate_option_order(&self) -> syn::Result<()> {
+        let mut found_optional = false;
+        let mut invalid_required_fields = Vec::new();
+
+        for field in &self.fields {
+            if !field.required {
+                found_optional = true;
+                continue;
+            }
+
+            if found_optional {
+                invalid_required_fields.push(field.name.clone());
+            }
+        }
+
+        if !invalid_required_fields.is_empty() {
+            let mut error = syn::Error::new(
+                invalid_required_fields[0].span(),
+                format!(
+                    "Required option '{}' must be placed before optional fields",
+                    invalid_required_fields[0]
+                ),
+            );
+
+            for field in invalid_required_fields.iter().skip(1) {
+                error.combine(syn::Error::new(
+                    field.span(),
+                    format!(
+                        "Required option '{}' must be placed before optional fields",
+                        field
+                    ),
+                ));
+            }
+
+            return Err(error);
+        }
+
+        // if !invalid_required_fields.is_empty() {
+        //     let error_message = invalid_required_fields
+        //         .iter()
+        //         .fold(None, |acc, field| {
+        //             let error = syn::Error::new(
+        //                 field.span(),
+        //                 "Required options must be placed before optional ones.",
+        //             );
+        //             Some(acc.map_or(error, |error_acc: syn::Error| error_acc.combine(error)))
+        //         })
+        //         .unwrap();
+
+        //     return Err(error_message);
+        // }
+
+        Ok(())
+    }
+
+    // TODO: Pretty sure this can be simplified.
+    pub fn generate_option_builder(field: &CommandOptionField) -> proc_macro2::TokenStream {
+        let name = &field.name;
+        let description = &field.description;
+
+        match &field.r#type {
+            CommandOptionType::String => {
+                let set_required = field.required.then(|| quote! { .required(true) });
+
+                quote! {
+                    builder = builder.option(
+                        twilight_util::builder::command::StringBuilder::new(#name, #description)
+                        #set_required
+                        .build()
+                    );
+                }
+            }
+            CommandOptionType::Attachment => {
+                let set_required = field.required.then(|| quote! { .required(true) });
+
+                quote! {
+                    builder = builder.option(
+                        twilight_util::builder::command::AttachmentBuilder::new(#name, #description)
+                        #set_required
+                        .build()
+                    );
+                }
+            }
+            CommandOptionType::Boolean => {
+                let set_required = field.required.then(|| quote! { .required(true) });
+
+                quote! {
+                    builder = builder.option(
+                        twilight_util::builder::command::BooleanBuilder::new(#name, #description)
+                        #set_required
+                        .build()
+                    );
+                }
+            }
+            CommandOptionType::Channel => {
+                let set_required = field.required.then(|| quote! { .required(true) });
+
+                quote! {
+                    builder = builder.option(
+                        twilight_util::builder::command::ChannelBuilder::new(#name, #description)
+                        #set_required
+                        .build()
+                    );
+                }
+            }
+            CommandOptionType::Integer => {
+                let set_required = field.required.then(|| quote! { .required(true) });
+
+                quote! {
+                    builder = builder.option(
+                        twilight_util::builder::command::IntegerBuilder::new(#name, #description)
+                        #set_required
+                        .build()
+                    );
+                }
+            }
+            CommandOptionType::Number => {
+                let set_required = field.required.then(|| quote! { .required(true) });
+
+                quote! {
+                    builder = builder.option(
+                        twilight_util::builder::command::NumberBuilder::new(#name, #description)
+                        #set_required
+                        .build()
+                    );
+                }
+            }
+            CommandOptionType::Role => {
+                let set_required = field.required.then(|| quote! { .required(true) });
+
+                quote! {
+                    builder = builder.option(
+                        twilight_util::builder::command::RoleBuilder::new(#name, #description)
+                        #set_required
+                        .build()
+                    );
+                }
+            }
+            CommandOptionType::User => {
+                let set_required = field.required.then(|| quote! { .required(true) });
+
+                quote! {
+                    builder = builder.option(
+                        twilight_util::builder::command::UserBuilder::new(#name, #description)
+                        #set_required
+                        .build()
+                    );
+                }
+            }
+        }
+    }
+
+    // TODO: Ditto.
+    pub fn generate_option_parser(field: &CommandOptionField) -> proc_macro2::TokenStream {
+        let name = &field.name;
+        let name_ident = format_ident!("{}", name);
+        let r#type = &field.r#type;
+
+        match r#type {
+            CommandOptionType::String => {
+                let unwrap_non_option = field
+                    .required
+                    .then(|| quote! { .expect("Option is required") });
+
+                quote! {
+                    let #name_ident = options
+                        .iter()
+                        .find(|option| option.name == #name)
+                        .map(|option| match option.value {
+                            twilight_model::application::interaction::application_command::CommandOptionValue::String(s) => s,
+                            _ => todo!("throw error here. even though the value MUST exist, i think we still should handle some cases"),
+                        })#unwrap_non_option;
+                }
+            }
+            CommandOptionType::Attachment => {
+                let unwrap_non_option = field
+                    .required
+                    .then(|| quote! { .expect("Option is required") });
+
+                quote! {
+                    let #name_ident = options
+                        .iter()
+                        .find(|option| option.name == #name)
+                        .map(|option| match option.value {
+                            twilight_model::application::interaction::application_command::CommandOptionValue::Attachment(a) => a,
+                            _ => todo!("throw error here. even though the value MUST exist, i think we still should handle some cases"),
+                        })#unwrap_non_option;
+                }
+            }
+            CommandOptionType::Boolean => {
+                let unwrap_non_option = field
+                    .required
+                    .then(|| quote! { .expect("Option is required") });
+
+                quote! {
+                    let #name_ident = options
+                        .iter()
+                        .find(|option| option.name == #name)
+                        .map(|option| match option.value {
+                            twilight_model::application::interaction::application_command::CommandOptionValue::Boolean(b) => b,
+                            _ => todo!("throw error here. even though the value MUST exist, i think we still should handle some cases"),
+                        })#unwrap_non_option;
+                }
+            }
+            CommandOptionType::Channel => {
+                let unwrap_non_option = field
+                    .required
+                    .then(|| quote! { .expect("Option is required") });
+
+                quote! {
+                    let #name_ident = options
+                        .iter()
+                        .find(|option| option.name == #name)
+                        .map(|option| match option.value {
+                            twilight_model::application::interaction::application_command::CommandOptionValue::Channel(c) => c,
+                            _ => todo!("throw error here. even though the value MUST exist, i think we still should handle some cases"),
+                        })#unwrap_non_option;
+                }
+            }
+            CommandOptionType::Integer => {
+                let unwrap_non_option = field
+                    .required
+                    .then(|| quote! { .expect("Option is required") });
+
+                quote! {
+                    let #name_ident = options
+                        .iter()
+                        .find(|option| option.name == #name)
+                        .map(|option| match option.value {
+                            twilight_model::application::interaction::application_command::CommandOptionValue::Integer(i) => i,
+                            _ => todo!("throw error here. even though the value MUST exist, i think we still should handle some cases"),
+                        })#unwrap_non_option;
+                }
+            }
+            CommandOptionType::Number => {
+                let unwrap_non_option = field
+                    .required
+                    .then(|| quote! { .expect("Option is required") });
+
+                quote! {
+                    let #name_ident = options
+                        .iter()
+                        .find(|option| option.name == #name)
+                        .map(|option| match option.value {
+                            twilight_model::application::interaction::application_command::CommandOptionValue::Number(n) => n,
+                            _ => todo!("throw error here. even though the value MUST exist, i think we still should handle some cases"),
+                        })#unwrap_non_option;
+                }
+            }
+            CommandOptionType::Role => {
+                let unwrap_non_option = field
+                    .required
+                    .then(|| quote! { .expect("Option is required") });
+
+                quote! {
+                    let #name_ident = options
+                        .iter()
+                        .find(|option| option.name == #name)
+                        .map(|option| match option.value {
+                            twilight_model::application::interaction::application_command::CommandOptionValue::Role(r) => r,
+                            _ => todo!("throw error here. even though the value MUST exist, i think we still should handle some cases"),
+                        })#unwrap_non_option;
+                }
+            }
+            CommandOptionType::User => {
+                let unwrap_non_option = field
+                    .required
+                    .then(|| quote! { .expect("Option is required") });
+
+                quote! {
+                    let #name_ident = options
+                        .iter()
+                        .find(|option| option.name == #name)
+                        .map(|option| match option.value {
+                            twilight_model::application::interaction::application_command::CommandOptionValue::User(u) => u,
+                            _ => todo!("throw error here. even though the value MUST exist, i think we still should handle some cases"),
+                        })#unwrap_non_option;
+                }
+            }
+        }
     }
 }

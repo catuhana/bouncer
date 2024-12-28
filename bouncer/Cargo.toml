@@ -7,9 +7,10 @@ edition.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-bouncer-framework = { path = "../bouncer-framework" }
 bouncer-config = { path = "../bouncer-config" }
 bouncer-cli = { path = "../bouncer-cli" }
+bouncer-framework = { path = "../bouncer-framework" }
+bouncer-macros = { path = "../bouncer-macros" }
 
 anyhow.workspace = true
 async-trait.workspace = true
@@ -20,3 +21,4 @@ twilight-cache-inmemory.workspace = true
 twilight-gateway.workspace = true
 twilight-http.workspace = true
 twilight-model.workspace = true
+twilight-util.workspace = true

@@ -1,5 +1,11 @@
 [workspace]
-members = ["bouncer", "bouncer-cli", "bouncer-config", "bouncer-framework", "bouncer-macros"]
+members = [
+  "bouncer",
+  "bouncer-cli",
+  "bouncer-config",
+  "bouncer-framework",
+  "bouncer-macros",
+]
 resolver = "2"
 
 [workspace.package]
@@ -21,6 +27,7 @@ twilight-cache-inmemory = "0.16.0-rc.1"
 twilight-gateway = "0.16.0-rc.1"
 twilight-http = "0.16.0-rc.1"
 twilight-model = "0.16.0-rc.1"
+twilight-util = "0.16.0-rc.1"
 
 [profile.release]
 lto = "thin"

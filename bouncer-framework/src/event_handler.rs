@@ -2,7 +2,7 @@ use crate::context::Context;
 
 use async_trait::async_trait;
 use twilight_gateway::{Event, EventTypeFlags};
-use twilight_model::gateway::payload::incoming::Ready;
+use twilight_model::gateway::payload::incoming::{InteractionCreate, Ready};
 
 macro_rules! create_event_handlers {
     ($($event_name:ident ($arg_type:ty)),* $(,)?) => {
@@ -34,7 +34,8 @@ macro_rules! create_event_handlers {
 }
 
 create_event_handlers! {
-    Ready(Box<Ready>)
+    Ready(Box<Ready>),
+    InteractionCreate(Box<InteractionCreate>)
 }
 
 #[async_trait]
