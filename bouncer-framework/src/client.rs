@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use secrecy::{ExposeSecret as _, SecretString};
-use tokio::sync::Mutex;
 use twilight_cache_inmemory::InMemoryCache;
 use twilight_gateway::{Intents, Shard, ShardId, StreamExt as _};
 use twilight_http::Client as HttpClient;
@@ -12,7 +11,7 @@ use crate::{
 };
 
 pub struct Client {
-    shard: Arc<Mutex<Shard>>,
+    shard: Shard,
     http: Arc<HttpClient>,
     cache: Arc<InMemoryCache>,
     event_handler: Box<dyn EventHandler>,
@@ -37,27 +36,28 @@ impl Client {
     }
 
     pub async fn start(&mut self) {
-        let mut shard = self.shard.lock().await;
-        while let Some(event) = shard
-            .next_event(self.event_handler.used_event_flags())
-            .await
-        {
-            let Ok(event) = event else {
-                tracing::error!(source = ?event.unwrap_err(), "error receiving event");
-
-                continue;
-            };
-
-            self.cache.update(&event);
-
-            event
-                .dispatch(self.create_context(), &*self.event_handler)
-                .await;
+        loop {
+            match self
+                .shard
+                .next_event(self.event_handler.used_event_flags())
+                .await
+            {
+                Some(Ok(event)) => {
+                    self.cache.update(&event);
+                    event
+                        .dispatch(self.create_context(), &*self.event_handler)
+                        .await;
+                }
+                Some(Err(error)) => {
+                    tracing::error!(source = ?error, "error receiving event");
+                }
+                None => break,
+            }
         }
     }
 
     fn create_context(&self) -> Context {
-        Context::new(self.shard.clone(), self.http.clone(), self.cache.clone())
+        Context::new(self.http.clone(), self.cache.clone())
     }
 }
 
@@ -69,13 +69,13 @@ impl ClientBuilder {
     #[must_use]
     pub fn build(self) -> Client {
         let http = Arc::new(self.http);
-        let shard = Arc::new(Mutex::new(Shard::new(
+        let shard = Shard::new(
             self.shard_id,
             http.token()
                 .expect("HTTP client doesn't have token")
                 .to_owned(),
             self.intents,
-        )));
+        );
         let cache = Arc::new(InMemoryCache::new());
         let event_handler = self.event_handler.expect("event handler not set");
 
