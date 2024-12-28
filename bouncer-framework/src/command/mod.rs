@@ -28,12 +28,10 @@ pub trait CommandOptions {
 }
 
 #[async_trait::async_trait]
-pub trait CommandExecutor {
+pub trait Command: CommandData + CommandOptions {
     // TODO: Have `interaction` and `ctx` as arguments.
     async fn execute(&self) -> Result<(), CommandExecuteError>;
 }
-
-pub trait Command: CommandData + CommandOptions + CommandExecutor {}
 
 #[derive(Debug, thiserror::Error)]
 pub enum CommandError {

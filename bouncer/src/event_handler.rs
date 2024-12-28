@@ -1,4 +1,4 @@
-use bouncer_framework::{command::CommandExecutor as _, Context, EventHandler};
+use bouncer_framework::{command::Command as _, Context, EventHandler};
 use twilight_model::{
     application::interaction::InteractionData,
     gateway::payload::incoming::{InteractionCreate, Ready},

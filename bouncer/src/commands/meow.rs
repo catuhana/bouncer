@@ -1,4 +1,4 @@
-use bouncer_framework::command::{Command, CommandExecuteError, CommandExecutor};
+use bouncer_framework::command::{Command, CommandExecuteError};
 use bouncer_macros::BouncerCommand;
 use twilight_model::id::{
     marker::{ChannelMarker, RoleMarker, UserMarker},
@@ -23,11 +23,9 @@ pub struct MeowCommand {
 }
 
 #[async_trait::async_trait]
-impl CommandExecutor for MeowCommand {
+impl Command for MeowCommand {
     async fn execute(&self) -> Result<(), CommandExecuteError> {
         tracing::info!("data :: {:?}", self);
         Ok(())
     }
 }
-
-impl Command for MeowCommand {}
