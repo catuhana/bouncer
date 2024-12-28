@@ -18,10 +18,7 @@ impl Commands {
             meow::MeowCommand::COMMAND_NAME => {
                 Ok(Self::Meow(meow::MeowCommand::parse_options(options)?))
             }
-            _ => Err(CommandNameParseError {
-                command_name: name.to_string(),
-            }
-            .into()),
+            _ => Err(CommandsError::CommandNameParseError(name.to_string())),
         }
     }
 
@@ -32,19 +29,8 @@ impl Commands {
 
 #[derive(Debug, thiserror::Error)]
 pub enum CommandsError {
-    #[error(transparent)]
-    CommandNameParseError(#[from] CommandNameParseError),
+    #[error("Could not find command {0}")]
+    CommandNameParseError(String),
     #[error(transparent)]
     CommandOptionsError(#[from] CommandOptionsError),
-}
-
-#[derive(Debug, thiserror::Error)]
-pub struct CommandNameParseError {
-    pub command_name: String,
-}
-
-impl ::std::fmt::Display for CommandNameParseError {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        write!(f, "Could not find command {}", self.command_name)
-    }
 }
