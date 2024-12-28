@@ -16,7 +16,7 @@ impl Commands {
     ) -> Result<Self, CommandsError> {
         match name {
             meow::MeowCommand::COMMAND_NAME => {
-                Ok(Commands::Meow(meow::MeowCommand::parse_options(options)?))
+                Ok(Self::Meow(meow::MeowCommand::parse_options(options)?))
             }
             _ => Err(CommandNameParseError {
                 command_name: name.to_string(),

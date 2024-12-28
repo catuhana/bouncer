@@ -35,7 +35,7 @@ impl EventHandler for Events {
 
         match Self::register_commands(context).await {
             // TODO: Maybe list registered commands.
-            Ok(_) => tracing::info!("commands registered"),
+            Ok(()) => tracing::info!("commands registered"),
             Err(error) => tracing::error!("{}", error),
         }
     }

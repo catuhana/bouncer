@@ -224,10 +224,7 @@ impl CommandOptionAttributeFields {
             for field in invalid_required_fields.iter().skip(1) {
                 error.combine(syn::Error::new(
                     field.span(),
-                    format!(
-                        "Required option '{}' must be placed before optional fields",
-                        field
-                    ),
+                    format!("Required option '{field}' must be placed before optional fields",),
                 ));
             }
 
