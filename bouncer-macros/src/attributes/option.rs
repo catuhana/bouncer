@@ -238,21 +238,6 @@ impl CommandOptionAttributeFields {
             return Err(error);
         }
 
-        // if !invalid_required_fields.is_empty() {
-        //     let error_message = invalid_required_fields
-        //         .iter()
-        //         .fold(None, |acc, field| {
-        //             let error = syn::Error::new(
-        //                 field.span(),
-        //                 "Required options must be placed before optional ones.",
-        //             );
-        //             Some(acc.map_or(error, |error_acc: syn::Error| error_acc.combine(error)))
-        //         })
-        //         .unwrap();
-
-        //     return Err(error_message);
-        // }
-
         Ok(())
     }
 
@@ -369,8 +354,8 @@ impl CommandOptionAttributeFields {
                     let #name_ident = options
                         .iter()
                         .find(|option| option.name == #name)
-                        .map(|option| match option.value {
-                            twilight_model::application::interaction::application_command::CommandOptionValue::String(s) => s,
+                        .map(|option| match &option.value {
+                            twilight_model::application::interaction::application_command::CommandOptionValue::String(s) => s.to_owned(),
                             _ => todo!("throw error here. even though the value MUST exist, i think we still should handle some cases"),
                         })#unwrap_non_option;
                 }
