@@ -15,7 +15,7 @@ async fn main() -> anyhow::Result<()> {
 
     let mut client = Client::builder(&config.discord.token)
         .event_handler(Events)
-        .build();
+        .try_build()?;
 
     client.start().await;
 

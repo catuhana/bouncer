@@ -65,26 +65,27 @@ impl ClientBuilder {
     /// # Panics
     ///
     /// Panics if [`ClientBuilder::event_handler`] is not set.
-    // TODO: Maybe errors here should be handled properly?
     #[must_use]
-    pub fn build(self) -> Client {
+    pub fn try_build(self) -> Result<Client, ClientBuilderError> {
         let http = Arc::new(self.http);
         let shard = Shard::new(
             self.shard_id,
             http.token()
-                .expect("HTTP client doesn't have token")
+                .ok_or(ClientBuilderError::MissingHTTPClientToken)?
                 .to_owned(),
             self.intents,
         );
         let cache = Arc::new(InMemoryCache::new());
-        let event_handler = self.event_handler.expect("event handler not set");
+        let event_handler = self
+            .event_handler
+            .ok_or(ClientBuilderError::MissingEventHandler)?;
 
-        Client {
+        Ok(Client {
             shard,
             http,
             cache,
             event_handler,
-        }
+        })
     }
 
     #[must_use]
@@ -100,4 +101,12 @@ impl ClientBuilder {
 
         self
     }
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum ClientBuilderError {
+    #[error("HTTP client doesn't have a token set")]
+    MissingHTTPClientToken,
+    #[error("Event handler is not set")]
+    MissingEventHandler,
 }
