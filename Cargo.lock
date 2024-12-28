@@ -156,6 +156,7 @@ dependencies = [
  "bouncer-config",
  "bouncer-framework",
  "bouncer-macros",
+ "thiserror",
  "tokio",
  "tracing",
  "tracing-subscriber",
