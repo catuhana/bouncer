@@ -266,10 +266,9 @@ impl CommandOptionAttributeFields {
     pub fn generate_option_parser(field: &CommandOptionField) -> proc_macro2::TokenStream {
         let name = &field.name;
         let name_ident = format_ident!("{}", name);
-        // TODO: Don't use `expect` here.
         let unwrap_non_option = field
             .required
-            .then(|| quote! { .expect("Option is required") });
+            .then(|| quote! { .ok_or(bouncer_framework::command::CommandOptionsError::MissingRequiredOption(String::from(#name)))? });
 
         let generate_parser = |value_type: proc_macro2::TokenStream,
                                value_pat: proc_macro2::TokenStream| {
@@ -278,13 +277,9 @@ impl CommandOptionAttributeFields {
                     .iter()
                     .find(|option| option.name == #name)
                     .map(|option| match &option.value {
-                        twilight_model::application::interaction::application_command::CommandOptionValue::#value_type(#value_pat) => #value_pat.to_owned(),
-                        _ => todo!("Handle invalid option type"),
-                        // _ => return Err(bouncer_framework::command::CommandOptionsError::InvalidOptionType {
-                        //     option_name: #name.to_string(),
-                        //     expected_type: stringify!(#value_type).to_string(),
-                        // }),
-                    })#unwrap_non_option;
+                        twilight_model::application::interaction::application_command::CommandOptionValue::#value_type(#value_pat) => Ok(#value_pat.to_owned()),
+                        option => return Err(bouncer_framework::command::CommandOptionsError::UnexpectedOptionType(String::from(#name), option.to_owned())),
+                    })#unwrap_non_option?;
             }
         };
 

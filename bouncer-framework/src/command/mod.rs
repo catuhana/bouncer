@@ -1,13 +1,11 @@
 use twilight_model::application::{
     command::{Command as TwilightCommand, CommandType},
-    interaction::application_command::CommandDataOption,
+    interaction::application_command::{CommandDataOption, CommandOptionValue},
 };
 use twilight_util::builder::command::CommandBuilder;
 
 pub trait CommandData {
-    /// Name of the slash command.
     const COMMAND_NAME: &'static str;
-    /// Description of the slash command.
     const COMMAND_DESCRIPTION: &'static str;
 
     fn command() -> TwilightCommand;
@@ -35,6 +33,14 @@ pub trait CommandExecutor {
 pub trait Command: CommandData + CommandOptions + CommandExecutor {}
 
 #[derive(Debug, thiserror::Error)]
+pub enum CommandError {
+    #[error(transparent)]
+    CommandExecuteError(#[from] CommandExecuteError),
+    #[error(transparent)]
+    CommandOptionsError(#[from] CommandOptionsError),
+}
+
+#[derive(Debug, thiserror::Error)]
 pub enum CommandExecuteError {
     #[error("An error occurred while executing the command: {0}")]
     CommandError(#[from] anyhow::Error),
@@ -42,6 +48,10 @@ pub enum CommandExecuteError {
 
 #[derive(Debug, thiserror::Error)]
 pub enum CommandOptionsError {
-    #[error("Failed to parse command options: {0}")]
-    ParseError(String),
+    // #[error("Failed to parse command options: {0}")]
+    // ParseError(String),
+    #[error("Unexpected option type for {0}")]
+    UnexpectedOptionType(String, CommandOptionValue),
+    #[error("Missing required option {0}")]
+    MissingRequiredOption(String),
 }
