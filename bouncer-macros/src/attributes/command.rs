@@ -54,12 +54,17 @@ impl syn::parse::Parse for CommandAttributeFields {
 }
 
 impl CommandAttributeFields {
-    pub fn parse_attrs(input: &syn::DeriveInput) -> syn::Result<Self> {
-        input
-            .attrs
-            .iter()
+    pub fn parse_attrs<'a>(
+        mut attributes: impl Iterator<Item = &'a syn::Attribute>,
+    ) -> syn::Result<Self> {
+        attributes
             .find(|attr| attr.path().is_ident("command"))
-            .ok_or_else(|| syn::Error::new_spanned(input, "missing #[command] attribute"))
+            .ok_or_else(|| {
+                syn::Error::new(
+                    proc_macro2::Span::call_site(),
+                    "missing #[command] attribute",
+                )
+            })
             .and_then(syn::Attribute::parse_args)
     }
 

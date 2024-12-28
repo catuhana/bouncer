@@ -12,12 +12,12 @@ mod attributes;
 pub fn bouncer_command_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as syn::DeriveInput);
 
-    let command_attrs = match CommandAttributeFields::parse_attrs(&input) {
+    let command_attrs = match CommandAttributeFields::parse_attrs(input.attrs.iter()) {
         Ok(attrs) => attrs,
         Err(error) => return error.to_compile_error().into(),
     };
 
-    let option_attrs = match CommandOptionAttributeFields::parse_attrs(&input) {
+    let option_attrs = match CommandOptionAttributeFields::parse_attrs(&input.data) {
         Ok(attrs) => attrs,
         Err(error) => return error.to_compile_error().into(),
     };
@@ -25,11 +25,11 @@ pub fn bouncer_command_derive(input: proc_macro::TokenStream) -> proc_macro::Tok
         Vec<_>,
         Vec<_>,
         Vec<proc_macro2::Ident>,
-    ) = multiunzip(option_attrs.fields.iter().map(|attr| {
+    ) = multiunzip(option_attrs.fields.iter().map(|field| {
         (
-            CommandOptionAttributeFields::generate_option_builder(attr),
-            CommandOptionAttributeFields::generate_option_parser(attr),
-            format_ident!("{}", &attr.name),
+            CommandOptionAttributeFields::generate_option_builder(field),
+            CommandOptionAttributeFields::generate_option_parser(field),
+            format_ident!("{}", &field.name),
         )
     }));
 

@@ -69,8 +69,8 @@ impl syn::parse::Parse for CommandOptionField {
 }
 
 impl CommandOptionAttributeFields {
-    pub fn parse_attrs(input: &syn::DeriveInput) -> syn::Result<Self> {
-        let syn::Data::Struct(data) = &input.data else {
+    pub fn parse_attrs(data: &syn::Data) -> syn::Result<Self> {
+        let syn::Data::Struct(data) = data else {
             return Ok(Self { fields: Vec::new() });
         };
 
