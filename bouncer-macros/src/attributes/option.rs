@@ -26,6 +26,10 @@ pub enum CommandOptionType {
 }
 
 impl CommandOptionField {
+    pub fn as_ident(&self) -> proc_macro2::Ident {
+        format_ident!("{}", self.name)
+    }
+
     fn parse_description(field: &syn::MetaNameValue) -> Option<String> {
         if !field.path.is_ident("description") {
             return None;
@@ -86,7 +90,7 @@ impl CommandOptionAttributeFields {
                 .find(|attr| attr.path().is_ident("option"))
             {
                 let mut option = attr.parse_args::<CommandOptionField>()?;
-                let (type_, required) = Self::parse_type(&field.ty)?;
+                let (r#type, required) = Self::parse_type(&field.ty)?;
 
                 option.name = field
                     .ident
@@ -97,7 +101,7 @@ impl CommandOptionAttributeFields {
                     })?;
                 Self::validate_option_name(&option.name, field.span())?;
 
-                option.r#type = type_;
+                option.r#type = r#type;
                 option.required = required;
 
                 fields.push(option);
@@ -265,7 +269,7 @@ impl CommandOptionAttributeFields {
         let name_ident = format_ident!("{}", name);
         let unwrap_non_option = field
             .required
-            .then(|| quote! { .ok_or(bouncer_framework::command::CommandOptionsError::MissingRequiredOption(String::from(#name)))? });
+            .then(|| quote!(.ok_or(bouncer_framework::command::CommandOptionsError::MissingRequiredOption(String::from(#name)))?));
 
         let generate_parser = |value_type: proc_macro2::TokenStream,
                                value_pat: proc_macro2::TokenStream| {

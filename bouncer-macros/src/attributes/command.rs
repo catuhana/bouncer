@@ -1,3 +1,4 @@
+use syn::spanned::Spanned;
 use twilight_validate::command;
 
 #[derive(Default)]
@@ -17,35 +18,30 @@ impl syn::parse::Parse for CommandAttributeFields {
         let mut description = String::default();
 
         for field in fields {
-            match (
-                field
-                    .path
-                    .get_ident()
-                    .map(std::string::ToString::to_string)
-                    .as_deref(),
-                field.value,
+            if let (
+                Some(ident),
+                syn::Expr::Lit(syn::ExprLit {
+                    lit: syn::Lit::Str(lit_str),
+                    ..
+                }),
+            ) = (
+                field.path.get_ident().map(ToString::to_string).as_deref(),
+                &field.value,
             ) {
-                (
-                    Some("name"),
-                    syn::Expr::Lit(syn::ExprLit {
-                        lit: syn::Lit::Str(lit_str),
-                        ..
-                    }),
-                ) => {
-                    name = lit_str.value();
-                    Self::validate_name(&name, lit_str.span())?;
+                match ident {
+                    "name" => {
+                        name = lit_str.value();
+                        Self::validate_name(&name, lit_str.span())?;
+                    }
+                    "description" => {
+                        description = lit_str.value();
+                        Self::validate_description(&description, lit_str.span())?;
+                    }
+                    _ => Err(syn::Error::new(
+                        ident.span(),
+                        "unknown command attribute field",
+                    ))?,
                 }
-                (
-                    Some("description"),
-                    syn::Expr::Lit(syn::ExprLit {
-                        lit: syn::Lit::Str(lit_str),
-                        ..
-                    }),
-                ) => {
-                    description = lit_str.value();
-                    Self::validate_description(&description, lit_str.span())?;
-                }
-                _ => continue,
             }
         }
 
@@ -62,7 +58,7 @@ impl CommandAttributeFields {
             .ok_or_else(|| {
                 syn::Error::new(
                     proc_macro2::Span::call_site(),
-                    "missing #[command] attribute",
+                    "missing `#[command]` attribute on a `BouncerCommand` derived struct",
                 )
             })
             .and_then(syn::Attribute::parse_args)

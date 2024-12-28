@@ -1,6 +1,6 @@
 use attributes::{command::CommandAttributeFields, option::CommandOptionAttributeFields};
 use itertools::multiunzip;
-use quote::{format_ident, quote};
+use quote::quote;
 
 extern crate proc_macro;
 
@@ -24,17 +24,14 @@ fn bouncer_command_derive_impl(input: proc_macro2::TokenStream) -> proc_macro2::
         Err(error) => return error.to_compile_error(),
     };
 
-    let (option_builders, option_parsed, option_attr_idents): (
-        Vec<_>,
-        Vec<_>,
-        Vec<proc_macro2::Ident>,
-    ) = multiunzip(option_attrs.fields.iter().map(|field| {
-        (
-            CommandOptionAttributeFields::generate_option_builder(field),
-            CommandOptionAttributeFields::generate_option_parser(field),
-            format_ident!("{}", &field.name),
-        )
-    }));
+    let (option_builders, option_parsed, option_attr_idents): (Vec<_>, Vec<_>, Vec<_>) =
+        multiunzip(option_attrs.fields.iter().map(|field| {
+            (
+                CommandOptionAttributeFields::generate_option_builder(field),
+                CommandOptionAttributeFields::generate_option_parser(field),
+                field.as_ident(),
+            )
+        }));
 
     let struct_name = &input.ident;
     let command_name = &command_attrs.name;
@@ -56,8 +53,6 @@ fn bouncer_command_derive_impl(input: proc_macro2::TokenStream) -> proc_macro2::
             fn parse_options(
                 options: &[twilight_model::application::interaction::application_command::CommandDataOption],
             ) -> Result<Self, bouncer_framework::command::CommandOptionsError>
-            where
-                Self: Sized,
             {
                 #(#option_parsed)*
 
