@@ -18,13 +18,11 @@ pub trait CommandData {
     }
 }
 
-pub trait CommandOptions {
+pub trait CommandOptions: Sized {
     /// # Errors
     ///
     /// Returns a `CommandOptionsError` if the options could not be parsed.
-    fn parse_options(options: &[CommandDataOption]) -> Result<Self, CommandOptionsError>
-    where
-        Self: Sized;
+    fn parse_options(options: &[CommandDataOption]) -> Result<Self, CommandOptionsError>;
 }
 
 #[async_trait::async_trait]
