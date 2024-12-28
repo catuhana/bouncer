@@ -1,25 +1,25 @@
 use bouncer_framework::command::{Command, CommandExecuteError};
 use bouncer_macros::BouncerCommand;
 use twilight_model::id::{
-    marker::{ChannelMarker, RoleMarker, UserMarker},
     Id,
+    marker::{ChannelMarker, RoleMarker, UserMarker},
 };
 
 #[derive(Debug, BouncerCommand)]
 #[command(name = "meow", description = "Meow!")]
 pub struct MeowCommand {
     #[option(description = "Test string option")]
-    _string_option: String,
+    _string: String,
     #[option(description = "Test integer option")]
-    _integer_option: i64,
+    _integer: i64,
     #[option(description = "Test boolean option")]
-    _boolean_option: bool,
+    _boolean: bool,
     #[option(description = "Test user option")]
-    _user_option: Id<UserMarker>,
+    _user: Id<UserMarker>,
     #[option(description = "Test channel option")]
-    _channel_option: Id<ChannelMarker>,
+    _channel: Id<ChannelMarker>,
     #[option(description = "Test role option")]
-    _role_option: Id<RoleMarker>,
+    _role: Id<RoleMarker>,
 }
 
 #[async_trait::async_trait]

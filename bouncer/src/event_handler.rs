@@ -1,4 +1,4 @@
-use bouncer_framework::{command::Command as _, Context, EventHandler};
+use bouncer_framework::{Context, EventHandler, command::Command as _};
 use twilight_model::{
     application::interaction::InteractionData,
     gateway::payload::incoming::{InteractionCreate, Ready},
@@ -28,7 +28,7 @@ impl Events {
 
         Ok(registred_commands
             .iter()
-            .map(|command| command.name.to_owned())
+            .map(|command| command.name.clone())
             .collect())
     }
 }
@@ -40,7 +40,7 @@ impl EventHandler for Events {
 
         match Self::register_commands(context).await {
             Ok(registered_command_names) => {
-                tracing::info!("registered command names: {:?}", registered_command_names)
+                tracing::info!("registered command names: {registered_command_names:?}");
             }
             Err(error) => tracing::error!("{}", error),
         }

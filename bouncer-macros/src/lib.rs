@@ -11,6 +11,10 @@ pub fn bouncer_command_derive(input: proc_macro::TokenStream) -> proc_macro::Tok
     bouncer_command_derive_impl(input.into()).into()
 }
 
+#[expect(
+    clippy::wildcard_imports,
+    reason = "`quote!` macro uses wildcard imports internally"
+)]
 fn bouncer_command_derive_impl(input: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
     let input = syn::parse2::<syn::DeriveInput>(input).expect("Failed to parse input");
 

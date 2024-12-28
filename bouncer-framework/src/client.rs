@@ -62,10 +62,10 @@ impl Client {
 }
 
 impl ClientBuilder {
-    /// # Panics
+    /// # Errors
     ///
-    /// Panics if [`ClientBuilder::event_handler`] is not set.
-    #[must_use]
+    /// Returns a [`ClientBuilderErrorType::MissingHTTPClientToken`] error if the HTTP client doesn't have a token set.
+    /// Returns a [`ClientBuilderErrorType::MissingEventHandler`] error if the event handler is not set.
     pub fn try_build(self) -> Result<Client, ClientBuilderError> {
         let http = Arc::new(self.http);
         let shard = Shard::new(
