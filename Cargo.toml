@@ -15,6 +15,9 @@ publish = false
 edition = "2024"
 rust-version = "1.85.0"
 
+[profile.release]
+lto = "thin"
+
 [workspace.dependencies]
 anyhow = "1.0.95"
 async-trait = "0.1.83"
@@ -29,5 +32,5 @@ twilight-http = "0.16.0-rc.1"
 twilight-model = "0.16.0-rc.1"
 twilight-util = "0.16.0-rc.1"
 
-[profile.release]
-lto = "thin"
+[patch.crates-io]
+figment = { git = "https://github.com/CodingAnarchy/Figment", rev = "e1e7bc7" }
