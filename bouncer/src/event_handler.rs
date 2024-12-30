@@ -1,4 +1,8 @@
-use bouncer_framework::{Context, EventHandler, command::Command as _};
+use bouncer_framework::{
+    Context, EventHandler,
+    command::{Command as _, CommandDataError},
+};
+use twilight_http::response::DeserializeBodyError;
 use twilight_model::{
     application::interaction::InteractionData,
     gateway::payload::incoming::{InteractionCreate, Ready},
@@ -21,7 +25,7 @@ impl Events {
         let registred_commands = context
             .http
             .interaction(application_id)
-            .set_global_commands(&commands::Commands::all_commands())
+            .set_global_commands(&commands::Commands::all_commands()?)
             .await?
             .model()
             .await?;
@@ -60,15 +64,11 @@ impl EventHandler for Events {
                     }
                 };
 
-                // TODO: Find a way to simplify this when there
-                // are many commands. Related to `./commands/mod.rs`
-                let result = match command {
+                if let Err(error) = match command {
                     commands::Commands::Meow(command) => {
                         command.execute(&context, &interaction.0).await
                     }
-                };
-
-                if let Err(error) = result {
+                } {
                     tracing::error!(?error, "failed to handle command");
                 }
             }
@@ -84,5 +84,7 @@ pub enum EventsError {
     #[error("An HTTP error occurred: {0}")]
     TwilightHttpError(#[from] twilight_http::Error),
     #[error("An error occurred while deserialising a model: {0}")]
-    TwilightModelDeserialiseError(#[from] twilight_http::response::DeserializeBodyError),
+    TwilightModelDeserialiseError(#[from] DeserializeBodyError),
+    #[error(transparent)]
+    CommandDataError(#[from] CommandDataError),
 }

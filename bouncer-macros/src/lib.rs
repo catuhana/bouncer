@@ -46,10 +46,10 @@ fn bouncer_command_derive_impl(input: proc_macro2::TokenStream) -> proc_macro2::
             const COMMAND_NAME: &'static str = #command_name;
             const COMMAND_DESCRIPTION: &'static str = #command_description;
 
-            fn command() -> twilight_model::application::command::Command {
+            fn command() -> Result<twilight_model::application::command::Command, bouncer_framework::command::CommandDataError> {
                 let mut builder = Self::command_builder();
                 #(#option_builders)*
-                builder.build()
+                Ok(builder.validate()?.build())
             }
         }
 

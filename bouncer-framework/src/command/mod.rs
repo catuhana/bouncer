@@ -6,6 +6,7 @@ use twilight_model::application::{
     },
 };
 use twilight_util::builder::command::CommandBuilder;
+use twilight_validate::command::CommandValidationError;
 
 use crate::{Context, exts::interaction::InteractionExtError};
 
@@ -13,9 +14,7 @@ pub trait CommandData {
     const COMMAND_NAME: &'static str;
     const COMMAND_DESCRIPTION: &'static str;
 
-    // TODO: Validate that the command is valid with
-    // `CommandBuilder::validate`.
-    fn command() -> TwilightCommand;
+    fn command() -> Result<TwilightCommand, CommandDataError>;
     fn command_builder() -> CommandBuilder {
         CommandBuilder::new(
             Self::COMMAND_NAME,
@@ -34,7 +33,6 @@ pub trait CommandOptions: Sized {
 
 #[async_trait::async_trait]
 pub trait Command: CommandData + CommandOptions {
-    // TODO: Have `interaction` and `ctx` as arguments.
     async fn execute(
         &self,
         context: &Context,
@@ -48,6 +46,12 @@ pub enum CommandError {
     CommandExecuteError(#[from] CommandExecuteError),
     #[error(transparent)]
     CommandOptionsError(#[from] CommandOptionsError),
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum CommandDataError {
+    #[error("Failed to build command: {0}")]
+    BuildError(#[from] CommandValidationError),
 }
 
 #[derive(Debug, thiserror::Error)]

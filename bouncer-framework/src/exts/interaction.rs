@@ -12,7 +12,7 @@ pub trait InteractionExt {
     ) -> Result<(), InteractionExtError>;
 }
 
-// TODO: Custom response type for messages.
+// TODO: Custom `response` type for messages.
 #[async_trait::async_trait]
 impl InteractionExt for Interaction {
     async fn test(
@@ -20,7 +20,6 @@ impl InteractionExt for Interaction {
         http_client: &HttpClient,
         response: InteractionResponse,
     ) -> Result<(), InteractionExtError> {
-        // TODO: Custom error handling.
         let application_id = self.application_id;
 
         http_client
