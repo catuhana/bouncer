@@ -1,9 +1,18 @@
-use bouncer_framework::command::{Command, CommandExecuteError};
-use bouncer_macros::BouncerCommand;
-use twilight_model::id::{
-    Id,
-    marker::{ChannelMarker, RoleMarker, UserMarker},
+use bouncer_framework::{
+    Context,
+    command::{Command, CommandExecuteError},
+    exts::interaction::InteractionExt,
 };
+use bouncer_macros::BouncerCommand;
+use twilight_model::{
+    application::interaction::Interaction,
+    http::interaction::{InteractionResponse, InteractionResponseType},
+    id::{
+        Id,
+        marker::{ChannelMarker, RoleMarker, UserMarker},
+    },
+};
+use twilight_util::builder::InteractionResponseDataBuilder;
 
 #[derive(Debug, BouncerCommand)]
 #[command(name = "meow", description = "Meow!")]
@@ -24,8 +33,18 @@ pub struct MeowCommand {
 
 #[async_trait::async_trait]
 impl Command for MeowCommand {
-    async fn execute(&self) -> Result<(), CommandExecuteError> {
-        tracing::info!("data :: {:?}", self);
+    async fn execute(
+        &self,
+        context: &Context,
+        interaction: &Interaction,
+    ) -> Result<(), CommandExecuteError> {
+        interaction
+            .test(&context.http, InteractionResponse {
+                kind: InteractionResponseType::ChannelMessageWithSource,
+                data: Some(InteractionResponseDataBuilder::new().content("uwu").build()),
+            })
+            .await?;
+
         Ok(())
     }
 }

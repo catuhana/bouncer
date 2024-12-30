@@ -46,7 +46,7 @@ impl EventHandler for Events {
         }
     }
 
-    async fn interaction_create(&self, _: Context, interaction: Box<InteractionCreate>) {
+    async fn interaction_create(&self, context: Context, interaction: Box<InteractionCreate>) {
         match interaction.data.as_ref() {
             Some(InteractionData::ApplicationCommand(command)) => {
                 let command = match commands::Commands::parse_from_command_name(
@@ -63,7 +63,9 @@ impl EventHandler for Events {
                 // TODO: Find a way to simplify this when there
                 // are many commands. Related to `./commands/mod.rs`
                 let result = match command {
-                    commands::Commands::Meow(command) => command.execute().await,
+                    commands::Commands::Meow(command) => {
+                        command.execute(&context, &interaction.0).await
+                    }
                 };
 
                 if let Err(error) = result {

@@ -1,8 +1,13 @@
 use twilight_model::application::{
     command::{Command as TwilightCommand, CommandType},
-    interaction::application_command::{CommandDataOption, CommandOptionValue},
+    interaction::{
+        Interaction,
+        application_command::{CommandDataOption, CommandOptionValue},
+    },
 };
 use twilight_util::builder::command::CommandBuilder;
+
+use crate::{Context, exts::interaction::InteractionExtError};
 
 pub trait CommandData {
     const COMMAND_NAME: &'static str;
@@ -30,7 +35,11 @@ pub trait CommandOptions: Sized {
 #[async_trait::async_trait]
 pub trait Command: CommandData + CommandOptions {
     // TODO: Have `interaction` and `ctx` as arguments.
-    async fn execute(&self) -> Result<(), CommandExecuteError>;
+    async fn execute(
+        &self,
+        context: &Context,
+        interaction: &Interaction,
+    ) -> Result<(), CommandExecuteError>;
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -45,6 +54,8 @@ pub enum CommandError {
 pub enum CommandExecuteError {
     #[error("An error occurred while executing the command: {0}")]
     CommandError(#[from] anyhow::Error),
+    #[error(transparent)]
+    InteractionError(#[from] InteractionExtError),
 }
 
 #[derive(Debug, thiserror::Error)]
