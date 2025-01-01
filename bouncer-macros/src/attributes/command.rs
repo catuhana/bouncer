@@ -58,7 +58,7 @@ impl CommandAttributeFields {
             .ok_or_else(|| {
                 syn::Error::new(
                     proc_macro2::Span::call_site(),
-                    "missing `#[command]` attribute on a `BouncerCommand` derived struct",
+                    "missing `#[command]` attribute on a `Command` derived struct",
                 )
             })
             .and_then(syn::Attribute::parse_args)

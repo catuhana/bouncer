@@ -18,10 +18,8 @@ pub struct CommandOptionField {
 pub enum CommandOptionType {
     #[default]
     Boolean,
-    Channel,
     Integer,
     User,
-    Role,
     String,
 }
 
@@ -162,6 +160,8 @@ impl CommandOptionAttributeFields {
             "bool" => Ok(CommandOptionType::Boolean),
             "i64" => Ok(CommandOptionType::Integer),
             "String" => Ok(CommandOptionType::String),
+            // TODO: Shouldn't use markers. Use a custom model
+            // instead.
             "Id" => Self::parse_id_type(segment, r#type),
             _ => Err(syn::Error::new(r#type.span(), "Unsupported type.")),
         }
@@ -190,9 +190,7 @@ impl CommandOptionAttributeFields {
             .ok_or_else(|| syn::Error::new(inner_type.span(), "Invalid type."))?;
 
         match inner_segment.ident.to_string().as_str() {
-            "ChannelMarker" => Ok(CommandOptionType::Channel),
             "UserMarker" => Ok(CommandOptionType::User),
-            "RoleMarker" => Ok(CommandOptionType::Role),
             _ => Err(syn::Error::new(inner_type.span(), "Unsupported type.")),
         }
     }
@@ -244,12 +242,10 @@ impl CommandOptionAttributeFields {
         let set_required = field.required.then(|| quote! { .required(true) });
 
         let builder_name = format_ident!("{}Builder", match field.r#type {
-            CommandOptionType::String => "String",
             CommandOptionType::Boolean => "Boolean",
-            CommandOptionType::Channel => "Channel",
             CommandOptionType::Integer => "Integer",
-            CommandOptionType::Role => "Role",
             CommandOptionType::User => "User",
+            CommandOptionType::String => "String",
         });
 
         quote! {
@@ -282,12 +278,10 @@ impl CommandOptionAttributeFields {
         };
 
         match field.r#type {
-            CommandOptionType::String => generate_parser(quote!(String), quote!(string)),
-            CommandOptionType::Integer => generate_parser(quote!(Integer), quote!(integer)),
             CommandOptionType::Boolean => generate_parser(quote!(Boolean), quote!(boolean)),
+            CommandOptionType::Integer => generate_parser(quote!(Integer), quote!(integer)),
+            CommandOptionType::String => generate_parser(quote!(String), quote!(string)),
             CommandOptionType::User => generate_parser(quote!(User), quote!(user)),
-            CommandOptionType::Channel => generate_parser(quote!(Channel), quote!(channel)),
-            CommandOptionType::Role => generate_parser(quote!(Role), quote!(role)),
         }
     }
 }

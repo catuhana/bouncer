@@ -1,3 +1,6 @@
+// TODO: This needs a refactor and support both
+// unit structs and enums (for subcommands).
+
 use attributes::{command::CommandAttributeFields, option::CommandOptionAttributeFields};
 use itertools::multiunzip;
 use quote::quote;
@@ -6,16 +9,16 @@ extern crate proc_macro;
 
 mod attributes;
 
-#[proc_macro_derive(BouncerCommand, attributes(command, option))]
-pub fn bouncer_command_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    bouncer_command_derive_impl(input.into()).into()
+#[proc_macro_derive(Command, attributes(command, option))]
+pub fn command_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    command_derive_impl(input.into()).into()
 }
 
 #[expect(
     clippy::wildcard_imports,
     reason = "`quote!` macro uses wildcard imports internally"
 )]
-fn bouncer_command_derive_impl(input: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
+fn command_derive_impl(input: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
     let input = syn::parse2::<syn::DeriveInput>(input).expect("Failed to parse input");
 
     let command_attrs = match CommandAttributeFields::parse_attrs(input.attrs.iter()) {

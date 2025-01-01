@@ -3,18 +3,14 @@ use bouncer_framework::{
     command::{Command, CommandExecuteError},
     exts::interaction::InteractionExt,
 };
-use bouncer_macros::BouncerCommand;
 use twilight_model::{
     application::interaction::Interaction,
     http::interaction::{InteractionResponse, InteractionResponseType},
-    id::{
-        Id,
-        marker::{ChannelMarker, RoleMarker, UserMarker},
-    },
+    id::{Id, marker::UserMarker},
 };
 use twilight_util::builder::InteractionResponseDataBuilder;
 
-#[derive(Debug, BouncerCommand)]
+#[derive(Debug, bouncer_macros::Command)]
 #[command(name = "meow", description = "Meow!")]
 pub struct MeowCommand {
     #[option(description = "Test string option")]
@@ -25,10 +21,6 @@ pub struct MeowCommand {
     _boolean: bool,
     #[option(description = "Test user option")]
     _user: Id<UserMarker>,
-    #[option(description = "Test channel option")]
-    _channel: Id<ChannelMarker>,
-    #[option(description = "Test role option")]
-    _role: Id<RoleMarker>,
 }
 
 #[async_trait::async_trait]
