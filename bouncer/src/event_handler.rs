@@ -22,7 +22,7 @@ impl Events {
             .await?
             .id;
 
-        let registred_commands = context
+        let registered_commands = context
             .http
             .interaction(application_id)
             .set_global_commands(&commands::Commands::all_commands()?)
@@ -30,7 +30,7 @@ impl Events {
             .model()
             .await?;
 
-        Ok(registred_commands
+        Ok(registered_commands
             .iter()
             .map(|command| command.name.clone())
             .collect())
