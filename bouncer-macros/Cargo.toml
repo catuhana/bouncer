@@ -13,8 +13,8 @@ workspace = true
 proc-macro = true
 
 [dependencies]
-itertools = "0.13.0"
+itertools = "0.14.0"
 proc-macro2 = "1.0.92"
-syn = { version = "2.0.93", features = ["parsing"] }
+syn = { version = "2.0.96", features = ["parsing"] }
 quote = "1.0.38"
 twilight-validate.workspace = true
