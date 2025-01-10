@@ -1,7 +1,7 @@
 use bouncer_framework::{
     Context,
     command::{Command, CommandExecuteError},
-    exts::interaction::InteractionExt,
+    exts::interaction::InteractionExt as _,
 };
 use twilight_model::{
     application::interaction::Interaction,

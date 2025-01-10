@@ -82,9 +82,9 @@ impl EventHandler for Events {
 #[derive(Debug, thiserror::Error)]
 pub enum EventsError {
     #[error("An HTTP error occurred: {0}")]
-    TwilightHttpError(#[from] twilight_http::Error),
+    TwilightHttp(#[from] twilight_http::Error),
     #[error("An error occurred while deserialising a model: {0}")]
-    TwilightModelDeserialiseError(#[from] DeserializeBodyError),
+    TwilightModelDeserialise(#[from] DeserializeBodyError),
     #[error(transparent)]
-    CommandDataError(#[from] CommandDataError),
+    CommandData(#[from] CommandDataError),
 }

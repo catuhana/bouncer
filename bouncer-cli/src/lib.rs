@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use clap::Parser;
+use clap::Parser as _;
 
 /// CLI options.
 #[derive(Debug, clap::Parser)]

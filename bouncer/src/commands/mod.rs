@@ -1,5 +1,5 @@
 use bouncer_framework::command::{
-    CommandData, CommandDataError, CommandOptions, CommandOptionsError,
+    CommandData as _, CommandDataError, CommandOptions as _, CommandOptionsError,
 };
 use twilight_model::application::{
     command::Command, interaction::application_command::CommandDataOption,

@@ -1,4 +1,4 @@
-use syn::spanned::Spanned;
+use syn::spanned::Spanned as _;
 use twilight_validate::command;
 
 #[derive(Default)]
