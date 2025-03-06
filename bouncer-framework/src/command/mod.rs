@@ -14,6 +14,9 @@ pub trait CommandData {
     const COMMAND_NAME: &'static str;
     const COMMAND_DESCRIPTION: &'static str;
 
+    /// # Errors
+    ///
+    /// Returns a `CommandDataError` if the command could not be built.
     fn command() -> Result<TwilightCommand, CommandDataError>;
     fn command_builder() -> CommandBuilder {
         CommandBuilder::new(

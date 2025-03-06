@@ -2,7 +2,6 @@
 // unit structs and enums (for subcommands).
 
 use attributes::{command::CommandAttributeFields, option::CommandOptionAttributeFields};
-use itertools::multiunzip;
 use quote::quote;
 
 extern crate proc_macro;
@@ -32,13 +31,17 @@ fn command_derive_impl(input: proc_macro2::TokenStream) -> proc_macro2::TokenStr
     };
 
     let (option_builders, option_parsed, option_attr_idents): (Vec<_>, Vec<_>, Vec<_>) =
-        multiunzip(option_attrs.fields.iter().map(|field| {
-            (
-                CommandOptionAttributeFields::generate_option_builder(field),
-                CommandOptionAttributeFields::generate_option_parser(field),
-                field.as_ident(),
-            )
-        }));
+        option_attrs
+            .fields
+            .iter()
+            .map(|field| {
+                (
+                    CommandOptionAttributeFields::generate_option_builder(field),
+                    CommandOptionAttributeFields::generate_option_parser(field),
+                    field.as_ident(),
+                )
+            })
+            .collect();
 
     let struct_name = &input.ident;
     let command_name = &command_attrs.name;
