@@ -39,30 +39,40 @@ pub trait Command: CommandData {
     ) -> Result<(), CommandExecuteError>;
 }
 
+/// # Errors
+///
+/// Returns a `CommandOptionsError` if the options could not be parsed.
 pub fn parse_optional_option<T>(
     options: &[CommandDataOption],
     name: &str,
     extractor: impl FnOnce(&CommandOptionValue) -> Option<T>,
 ) -> Result<Option<T>, CommandOptionsError> {
-    match options.iter().find(|opt| opt.name == name) {
-        Some(opt) => extractor(&opt.value).map(Some).ok_or_else(|| {
-            CommandOptionsError::UnexpectedOptionType(name.to_string(), opt.value.kind())
-        }),
-        None => Ok(None),
-    }
+    options.iter().find(|opt| opt.name == name).map_or_else(
+        || Ok(None),
+        |opt| {
+            extractor(&opt.value).map(Some).ok_or_else(|| {
+                CommandOptionsError::UnexpectedOptionType(name.to_string(), opt.value.kind())
+            })
+        },
+    )
 }
 
+/// # Errors
+///
+/// Returns a `CommandOptionsError` if the options could not be parsed.
 pub fn parse_required_option<T>(
     options: &[CommandDataOption],
     name: &str,
     extractor: impl FnOnce(&CommandOptionValue) -> Option<T>,
 ) -> Result<T, CommandOptionsError> {
-    match options.iter().find(|opt| opt.name == name) {
-        Some(opt) => extractor(&opt.value).ok_or_else(|| {
-            CommandOptionsError::UnexpectedOptionType(name.to_string(), opt.value.kind())
-        }),
-        None => Err(CommandOptionsError::MissingRequiredOption(name.to_string())),
-    }
+    options.iter().find(|opt| opt.name == name).map_or_else(
+        || Err(CommandOptionsError::MissingRequiredOption(name.to_string())),
+        |opt| {
+            extractor(&opt.value).ok_or_else(|| {
+                CommandOptionsError::UnexpectedOptionType(name.to_string(), opt.value.kind())
+            })
+        },
+    )
 }
 
 #[derive(Debug, thiserror::Error)]

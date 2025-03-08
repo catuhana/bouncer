@@ -154,7 +154,7 @@ impl quote::ToTokens for Command {
                 }
             });
 
-            return ();
+            return;
         }
 
         let mut option_builders = Vec::new();
