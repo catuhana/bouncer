@@ -42,24 +42,24 @@ pub struct CommandOptionField {
 impl Command {
     fn parse_command_name(meta: &syn::Meta) -> darling::Result<Option<String>> {
         let command_name = String::from_meta(meta)?.to_lowercase();
-        validate_command_chat_input_name(&command_name).map(|_| Some(command_name))
+        validate_command_chat_input_name(&command_name).map(|()| Some(command_name))
     }
 
     fn parse_command_description(meta: &syn::Meta) -> darling::Result<String> {
         let command_description = String::from_meta(meta)?;
-        validate_command_description(&command_description).map(|_| command_description)
+        validate_command_description(&command_description).map(|()| command_description)
     }
 }
 
 impl CommandOptionField {
     fn parse_command_option_name(meta: &syn::Meta) -> darling::Result<Option<String>> {
         let option_name = String::from_meta(meta)?.to_lowercase();
-        validate_option_name(&option_name).map(|_| Some(option_name))
+        validate_option_name(&option_name).map(|()| Some(option_name))
     }
 
     fn parse_command_description(meta: &syn::Meta) -> darling::Result<String> {
         let option_description = String::from_meta(meta)?;
-        validate_command_description(&option_description).map(|_| option_description)
+        validate_command_description(&option_description).map(|()| option_description)
     }
 
     fn generate_option_builders(&self) -> proc_macro2::TokenStream {
