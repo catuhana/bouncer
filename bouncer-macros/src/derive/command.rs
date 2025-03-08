@@ -141,6 +141,21 @@ impl quote::ToTokens for Command {
             unreachable!()
         };
 
+        if fields.is_unit() {
+            tokens.extend(quote! {
+                impl bouncer_framework::command::CommandData for #ident {
+                    const COMMAND_NAME: &'static str = #command_name;
+                    const COMMAND_DESCRIPTION: &'static str = #command_description;
+
+                    fn command() -> twilight_model::application::command::Command {
+                        Self::command_builder().build()
+                    }
+                }
+            });
+
+            return ();
+        }
+
         let mut option_builders = Vec::new();
         let mut option_parsers = Vec::new();
         let mut field_idents = Vec::new();

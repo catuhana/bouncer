@@ -31,7 +31,7 @@ pub trait CommandOptions: Sized {
 }
 
 #[async_trait::async_trait]
-pub trait Command: CommandData + CommandOptions {
+pub trait Command: CommandData {
     async fn execute(
         &self,
         context: &Context,
