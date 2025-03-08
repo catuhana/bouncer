@@ -39,7 +39,7 @@ pub enum ConfigParseError {
 #[cfg(test)]
 mod tests {
     use figment::Jail;
-    use secrecy::ExposeSecret;
+    use secrecy::ExposeSecret as _;
 
     use crate::{Config, ConfigParseError};
 
@@ -48,10 +48,10 @@ mod tests {
         Jail::expect_with(|jail| {
             jail.create_file(
                 "config.yaml",
-                r#"
+                r"
                 discord:
                     token: meow
-                "#,
+                ",
             )?;
 
             let config = Config::parse("config.yaml").unwrap();
@@ -66,10 +66,10 @@ mod tests {
         Jail::expect_with(|jail| {
             jail.create_file(
                 "config.yaml",
-                r#"
+                r"
                 discord:
                     token: meow
-                "#,
+                ",
             )?;
 
             jail.set_env("BOUNCER_DISCORD__TOKEN", "mrrp");
@@ -93,10 +93,10 @@ mod tests {
         Jail::expect_with(|jail| {
             jail.create_file(
                 "config.yaml",
-                r#"
+                r"
                 discord: {
                   token: [invalid
-                "#,
+                ",
             )?;
 
             let result = Config::parse("config.yaml");

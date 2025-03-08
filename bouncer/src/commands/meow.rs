@@ -6,7 +6,6 @@ use bouncer_framework::{
 use twilight_model::{
     application::interaction::Interaction,
     http::interaction::{InteractionResponse, InteractionResponseType},
-    id::{Id, marker::UserMarker},
 };
 use twilight_util::builder::InteractionResponseDataBuilder;
 
@@ -15,12 +14,10 @@ use twilight_util::builder::InteractionResponseDataBuilder;
 pub struct MeowCommand {
     #[option(description = "Test string option")]
     _string: String,
-    #[option(description = "Test integer option")]
-    _integer: i64,
     #[option(description = "Test boolean option")]
     _boolean: bool,
-    #[option(description = "Test user option")]
-    _user: Id<UserMarker>,
+    // #[option(description = "Test user option")]
+    // _user: Id<UserMarker>,
 }
 
 #[async_trait::async_trait]
@@ -31,10 +28,13 @@ impl Command for MeowCommand {
         interaction: &Interaction,
     ) -> Result<(), CommandExecuteError> {
         interaction
-            .test(&context.http, InteractionResponse {
-                kind: InteractionResponseType::ChannelMessageWithSource,
-                data: Some(InteractionResponseDataBuilder::new().content("uwu").build()),
-            })
+            .test(
+                &context.http,
+                InteractionResponse {
+                    kind: InteractionResponseType::ChannelMessageWithSource,
+                    data: Some(InteractionResponseDataBuilder::new().content("uwu").build()),
+                },
+            )
             .await?;
 
         Ok(())

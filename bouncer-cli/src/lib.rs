@@ -58,14 +58,14 @@ pub enum CliParseError {
 }
 
 #[derive(Debug, thiserror::Error)]
-#[cfg_attr(test, derive(PartialEq))]
+#[cfg_attr(test, derive(PartialEq, Eq))]
 pub enum ValidationError {
     #[error(transparent)]
     Config(#[from] ConfigValidationError),
 }
 
 #[derive(Debug, thiserror::Error)]
-#[cfg_attr(test, derive(PartialEq))]
+#[cfg_attr(test, derive(PartialEq, Eq))]
 pub enum ConfigValidationError {
     #[error("Specified config file does not exist: {0}")]
     DoesNotExist(String),

@@ -1,7 +1,4 @@
-use bouncer_framework::{
-    Context, EventHandler,
-    command::{Command as _, CommandDataError},
-};
+use bouncer_framework::{Context, EventHandler, command::Command as _};
 use twilight_http::response::DeserializeBodyError;
 use twilight_model::{
     application::interaction::InteractionData,
@@ -25,7 +22,7 @@ impl Events {
         let registered_commands = context
             .http
             .interaction(application_id)
-            .set_global_commands(&commands::Commands::all_commands()?)
+            .set_global_commands(&commands::Commands::all_commands())
             .await?
             .model()
             .await?;
@@ -85,6 +82,4 @@ pub enum EventsError {
     TwilightHttp(#[from] twilight_http::Error),
     #[error("An error occurred while deserialising a model: {0}")]
     TwilightModelDeserialise(#[from] DeserializeBodyError),
-    #[error(transparent)]
-    CommandData(#[from] CommandDataError),
 }

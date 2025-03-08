@@ -212,6 +212,7 @@ dependencies = [
 name = "bouncer-macros"
 version = "0.0.0"
 dependencies = [
+ "darling",
  "proc-macro2",
  "quote",
  "syn",
@@ -347,6 +348,38 @@ name = "crossbeam-utils"
 version = "0.8.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d0a5c400df2834b80a4c3327b3aad3a4c4cd4de0629063962b03235697506a28"
+
+[[package]]
+name = "darling"
+version = "0.20.10"
+source = "git+https://github.com/TedDriggs/darling?rev=f18d5d53883ee62377f2374bfb272b8d67e03754#f18d5d53883ee62377f2374bfb272b8d67e03754"
+dependencies = [
+ "darling_core",
+ "darling_macro",
+]
+
+[[package]]
+name = "darling_core"
+version = "0.20.10"
+source = "git+https://github.com/TedDriggs/darling?rev=f18d5d53883ee62377f2374bfb272b8d67e03754#f18d5d53883ee62377f2374bfb272b8d67e03754"
+dependencies = [
+ "fnv",
+ "ident_case",
+ "proc-macro2",
+ "quote",
+ "strsim",
+ "syn",
+]
+
+[[package]]
+name = "darling_macro"
+version = "0.20.10"
+source = "git+https://github.com/TedDriggs/darling?rev=f18d5d53883ee62377f2374bfb272b8d67e03754#f18d5d53883ee62377f2374bfb272b8d67e03754"
+dependencies = [
+ "darling_core",
+ "quote",
+ "syn",
+]
 
 [[package]]
 name = "dashmap"
@@ -625,6 +658,12 @@ dependencies = [
  "tower-service",
  "tracing",
 ]
+
+[[package]]
+name = "ident_case"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b9e0384b61958566e926dc50660321d12159025e767c18e043daf26b70104c39"
 
 [[package]]
 name = "indexmap"

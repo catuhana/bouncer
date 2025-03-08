@@ -1,6 +1,4 @@
-use bouncer_framework::command::{
-    CommandData as _, CommandDataError, CommandOptions as _, CommandOptionsError,
-};
+use bouncer_framework::command::{CommandData as _, CommandOptions as _, CommandOptionsError};
 use twilight_model::application::{
     command::Command, interaction::application_command::CommandDataOption,
 };
@@ -24,8 +22,8 @@ impl Commands {
         }
     }
 
-    pub fn all_commands() -> Result<Vec<Command>, CommandDataError> {
-        Ok(vec![meow::MeowCommand::command()?])
+    pub fn all_commands() -> Vec<Command> {
+        vec![meow::MeowCommand::command()]
     }
 }
 

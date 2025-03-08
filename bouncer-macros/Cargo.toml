@@ -13,7 +13,8 @@ workspace = true
 proc-macro = true
 
 [dependencies]
+darling = { git = "https://github.com/TedDriggs/darling", rev = "f18d5d53883ee62377f2374bfb272b8d67e03754" }
 proc-macro2 = "1.0.94"
-syn = { version = "2.0.99", features = ["parsing"] }
 quote = "1.0.39"
+syn = { version = "2.0.99", features = ["parsing"] }
 twilight-validate.workspace = true
