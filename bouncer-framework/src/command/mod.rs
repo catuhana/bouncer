@@ -1,5 +1,5 @@
 use twilight_model::application::{
-    command::{Command as TwilightCommand, CommandType},
+    command::{Command as TwilightCommand, CommandOptionType, CommandType},
     interaction::{
         Interaction,
         application_command::{CommandDataOption, CommandOptionValue},
@@ -39,6 +39,32 @@ pub trait Command: CommandData {
     ) -> Result<(), CommandExecuteError>;
 }
 
+pub fn parse_optional_option<T>(
+    options: &[CommandDataOption],
+    name: &str,
+    extractor: impl FnOnce(&CommandOptionValue) -> Option<T>,
+) -> Result<Option<T>, CommandOptionsError> {
+    match options.iter().find(|opt| opt.name == name) {
+        Some(opt) => extractor(&opt.value).map(Some).ok_or_else(|| {
+            CommandOptionsError::UnexpectedOptionType(name.to_string(), opt.value.kind())
+        }),
+        None => Ok(None),
+    }
+}
+
+pub fn parse_required_option<T>(
+    options: &[CommandDataOption],
+    name: &str,
+    extractor: impl FnOnce(&CommandOptionValue) -> Option<T>,
+) -> Result<T, CommandOptionsError> {
+    match options.iter().find(|opt| opt.name == name) {
+        Some(opt) => extractor(&opt.value).ok_or_else(|| {
+            CommandOptionsError::UnexpectedOptionType(name.to_string(), opt.value.kind())
+        }),
+        None => Err(CommandOptionsError::MissingRequiredOption(name.to_string())),
+    }
+}
+
 #[derive(Debug, thiserror::Error)]
 pub enum CommandError {
     #[error(transparent)]
@@ -59,8 +85,8 @@ pub enum CommandExecuteError {
 pub enum CommandOptionsError {
     // #[error("Failed to parse command options: {0}")]
     // ParseError(String),
-    #[error("Unexpected option type for {0}")]
-    UnexpectedOptionType(String, CommandOptionValue),
+    #[error("Unexpected option type for {0}: received {1:?}")]
+    UnexpectedOptionType(String, CommandOptionType),
     #[error("Missing required option {0}")]
     MissingRequiredOption(String),
 }

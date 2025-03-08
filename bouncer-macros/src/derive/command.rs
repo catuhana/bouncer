@@ -78,11 +78,11 @@ impl CommandOptionField {
 
                 let builder_type = format_ident!("{}Builder", option_type);
                 quote! {
-                    builder = builder.option(
+                    .option(
                         twilight_util::builder::command::#builder_type::new(#option_name, #option_description)
                             .required(#required)
                             .build()
-                    );
+                    )
                 }
             }
             Err(error) => error.write_errors(),
@@ -104,27 +104,28 @@ impl CommandOptionField {
             Err(error) => return error.write_errors(),
         };
 
-        let unwrap_clause = if required {
-            quote!(.ok_or(
-                bouncer_framework::command::CommandOptionsError::MissingRequiredOption(String::from(#option_name))
-            )?)
-        } else {
-            quote!()
-        };
+        if required {
+            return quote! {
+                let #option_name_ident = bouncer_framework::command::parse_required_option(
+                    options,
+                    #option_name,
+                    |value| match value {
+                        #option_type(value) => Some(value.to_owned()),
+                        _ => None,
+                    }
+                )?;
+            };
+        }
 
         quote! {
-            let #option_name_ident = options
-                .iter()
-                .find(|option| option.name == #option_name)
-                .map(|option| match &option.value {
-                    #option_type(value) => Ok(value.to_owned()),
-                    option => return Err(
-                        bouncer_framework::command::CommandOptionsError::UnexpectedOptionType(
-                            String::from(#option_name),
-                            option.to_owned()
-                        )
-                    ),
-                })#unwrap_clause?;
+            let #option_name_ident = bouncer_framework::command::parse_optional_option(
+                options,
+                #option_name,
+                |value| match value {
+                    #option_type(value) => Some(value.to_owned()),
+                    _ => None,
+                }
+            )?;
         }
     }
 }
@@ -172,9 +173,9 @@ impl quote::ToTokens for Command {
                 const COMMAND_DESCRIPTION: &'static str = #command_description;
 
                 fn command() -> twilight_model::application::command::Command {
-                    let mut builder = Self::command_builder();
-                    #(#option_builders)*
-                    builder.build()
+                    Self::command_builder()
+                        #(#option_builders)*
+                        .build()
                 }
             }
 
