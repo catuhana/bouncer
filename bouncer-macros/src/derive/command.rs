@@ -93,7 +93,7 @@ impl CommandOptionField {
         let ident = self.ident.as_ref().unwrap();
         let field_name = ident.to_string().to_lowercase();
         let option_name = self.name.as_deref().unwrap_or(&field_name);
-        let option_name_ident = format_ident!("{}", option_name);
+        let option_name_ident = format_ident!("{option_name}");
 
         let result = CommandOption::try_from(&self.ty);
         let (option_type, required) = match result {

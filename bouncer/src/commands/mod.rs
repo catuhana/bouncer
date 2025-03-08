@@ -5,6 +5,7 @@ use twilight_model::application::{
 
 pub mod meow;
 
+#[derive(Debug)]
 pub enum Commands {
     Meow(meow::MeowCommand),
 }

@@ -14,7 +14,7 @@ macro_rules! create_event_handlers {
                     )*
 
                     fn used_event_flags(&self) -> EventTypeFlags {
-                        EventTypeFlags::empty() $(| EventTypeFlags::[<$event_name:snake:upper>])*
+                        $(EventTypeFlags::[<$event_name:snake:upper>])|*
                     }
             }
 

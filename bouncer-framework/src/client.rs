@@ -36,22 +36,21 @@ impl Client {
     }
 
     pub async fn start(&mut self) {
-        loop {
-            match self
-                .shard
-                .next_event(self.event_handler.used_event_flags())
-                .await
-            {
-                Some(Ok(event)) => {
+        while let Some(event) = self
+            .shard
+            .next_event(self.event_handler.used_event_flags())
+            .await
+        {
+            match event {
+                Ok(event) => {
                     self.cache.update(&event);
                     event
                         .dispatch(self.create_context(), &*self.event_handler)
                         .await;
                 }
-                Some(Err(error)) => {
+                Err(error) => {
                     tracing::error!(source = ?error, "error receiving event");
                 }
-                None => break,
             }
         }
     }

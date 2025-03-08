@@ -7,6 +7,7 @@ use twilight_model::{
 
 use crate::commands;
 
+#[derive(Debug)]
 pub struct Events;
 
 impl Events {
