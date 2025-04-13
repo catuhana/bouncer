@@ -72,14 +72,14 @@ impl CommandOptionField {
         match result {
             Ok(option) => {
                 let (option_type, required) = match option {
-                    CommandOption::Optional(typ) => (typ, false),
-                    CommandOption::Required(typ) => (typ, true),
+                    CommandOption::Optional(ty) => (ty, false),
+                    CommandOption::Required(ty) => (ty, true),
                 };
 
                 let builder_type = format_ident!("{}Builder", option_type);
                 quote! {
                     .option(
-                        twilight_util::builder::command::#builder_type::new(#option_name, #option_description)
+                        ::twilight_util::builder::command::#builder_type::new(#option_name, #option_description)
                             .required(#required)
                             .build()
                     )
@@ -98,15 +98,15 @@ impl CommandOptionField {
         let result = CommandOption::try_from(&self.ty);
         let (option_type, required) = match result {
             Ok(option) => match option {
-                CommandOption::Optional(typ) => (typ, false),
-                CommandOption::Required(typ) => (typ, true),
+                CommandOption::Optional(ty) => (ty, false),
+                CommandOption::Required(ty) => (ty, true),
             },
             Err(error) => return error.write_errors(),
         };
 
         if required {
             return quote! {
-                let #option_name_ident = bouncer_framework::command::parse_required_option(
+                let #option_name_ident = ::bouncer_framework::command::parse_required_option(
                     options,
                     #option_name,
                     |value| match value {
@@ -118,7 +118,7 @@ impl CommandOptionField {
         }
 
         quote! {
-            let #option_name_ident = bouncer_framework::command::parse_optional_option(
+            let #option_name_ident = ::bouncer_framework::command::parse_optional_option(
                 options,
                 #option_name,
                 |value| match value {
@@ -144,11 +144,11 @@ impl quote::ToTokens for Command {
 
         if fields.is_unit() {
             tokens.extend(quote! {
-                impl bouncer_framework::command::CommandData for #ident {
+                impl ::bouncer_framework::command::CommandData for #ident {
                     const COMMAND_NAME: &'static str = #command_name;
                     const COMMAND_DESCRIPTION: &'static str = #command_description;
 
-                    fn command() -> twilight_model::application::command::Command {
+                    fn command() -> ::twilight_model::application::command::Command {
                         Self::command_builder().build()
                     }
                 }
@@ -168,21 +168,21 @@ impl quote::ToTokens for Command {
         }
 
         tokens.extend(quote! {
-            impl bouncer_framework::command::CommandData for #ident {
+            impl ::bouncer_framework::command::CommandData for #ident {
                 const COMMAND_NAME: &'static str = #command_name;
                 const COMMAND_DESCRIPTION: &'static str = #command_description;
 
-                fn command() -> twilight_model::application::command::Command {
+                fn command() -> ::twilight_model::application::command::Command {
                     Self::command_builder()
                         #(#option_builders)*
                         .build()
                 }
             }
 
-            impl bouncer_framework::command::CommandOptions for #ident {
+            impl ::bouncer_framework::command::CommandOptions for #ident {
                 fn parse_options(
-                    options: &[twilight_model::application::interaction::application_command::CommandDataOption],
-                ) -> Result<Self, bouncer_framework::command::CommandOptionsError>
+                    options: &[::twilight_model::application::interaction::application_command::CommandDataOption],
+                ) -> Result<Self, ::bouncer_framework::command::CommandOptionsError>
                 {
                     #(#option_parsers)*
 
@@ -284,10 +284,10 @@ impl quote::ToTokens for CommandOptionType {
     fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
         match self {
             Self::Boolean => {
-                quote!(twilight_model::application::interaction::application_command::CommandOptionValue::Boolean)
+                quote!(::twilight_model::application::interaction::application_command::CommandOptionValue::Boolean)
             }
             Self::String => {
-                quote!(twilight_model::application::interaction::application_command::CommandOptionValue::String)
+                quote!(::twilight_model::application::interaction::application_command::CommandOptionValue::String)
             }
         }
         .to_tokens(tokens);
